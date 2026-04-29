@@ -11,9 +11,10 @@ Its main goal is to turn "whether test data is shared, when it is isolated, and 
 
 ## Modules
 
-- `tdl-core`: common contracts and runtime capabilities (`FixtureProvider`, `FixtureIsolationStrategy`, lifecycle management)
+- `tdl-core`: common contracts and runtime capabilities (`FixtureProvider`, `ShareStrategy`, lifecycle management)
 - `tdl-junit5`: JUnit 5 adapter layer (`@Fixture` annotation and `FixtureExtension` injection)
-- `examples`: examples and regression tests
+- `tdl-testng`: TestNG adapter layer (`@Fixture` field injection via `FixtureListener`)
+- `examples`: JUnit 5 examples and regression tests
 
 ## Design Highlights (Current)
 
@@ -56,7 +57,7 @@ Compatibility key: `tdl.junit5.fixture.default-strategy-class`
 ## Quick Validation
 
 ```powershell
-mvn -q -pl examples test
+.\mvnw.cmd -q test
 ```
 
 > Note: the project is still in an early iteration stage. Treat the RFC and example tests as the source of truth for API behavior.

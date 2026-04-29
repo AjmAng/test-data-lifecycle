@@ -11,6 +11,7 @@
     <modules>
         <module>tdl-core</module>
         <module>tdl-junit5</module>
+        <module>tdl-testng</module>
         <module>examples</module>
     </modules>
 
