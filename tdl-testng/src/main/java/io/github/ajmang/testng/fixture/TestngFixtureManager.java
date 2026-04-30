@@ -1,12 +1,6 @@
 package io.github.ajmang.testng.fixture;
 
-import io.github.ajmang.tdl.core.fixture.Fixture;
-import io.github.ajmang.tdl.core.fixture.FixtureManager;
-import io.github.ajmang.tdl.core.fixture.FixtureRequest;
-import io.github.ajmang.tdl.core.fixture.FixtureScopeContext;
-import io.github.ajmang.tdl.core.fixture.FixtureStore;
-import io.github.ajmang.tdl.core.fixture.ManagedFixture;
-import io.github.ajmang.tdl.core.fixture.ShareStrategy;
+import io.github.ajmang.tdl.core.fixture.*;
 import org.testng.ISuite;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
@@ -28,6 +22,21 @@ public class TestngFixtureManager {
     private static final String FIXTURE_MAP_KEY = TestngFixtureManager.class.getName() + ".fixtures";
 
     private final FixtureManager fixtureManager = new FixtureManager();
+
+    public static void closeAll(ISuite suite) {
+        Object stored = suite.getAttribute(FIXTURE_MAP_KEY);
+        if (!(stored instanceof ConcurrentMap<?, ?> rawMap)) {
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<String, ManagedFixture<?>> fixtureMap = (ConcurrentMap<String, ManagedFixture<?>>) rawMap;
+        for (ManagedFixture<?> fixture : fixtureMap.values()) {
+            fixture.close();
+        }
+        fixtureMap.clear();
+        suite.removeAttribute(FIXTURE_MAP_KEY);
+    }
 
     public Object getOrCreate(Class<?> type, Fixture annotation, ITestResult testResult, InjectionMetadata metadata) {
         ISuite suite = testResult.getTestContext().getSuite();
@@ -51,21 +60,6 @@ public class TestngFixtureManager {
         );
 
         return fixtureManager.getOrCreate(request, scope, new TestngFixtureStore(suite));
-    }
-
-    public static void closeAll(ISuite suite) {
-        Object stored = suite.getAttribute(FIXTURE_MAP_KEY);
-        if (!(stored instanceof ConcurrentMap<?, ?> rawMap)) {
-            return;
-        }
-
-        @SuppressWarnings("unchecked")
-        ConcurrentMap<String, ManagedFixture<?>> fixtureMap = (ConcurrentMap<String, ManagedFixture<?>>) rawMap;
-        for (ManagedFixture<?> fixture : fixtureMap.values()) {
-            fixture.close();
-        }
-        fixtureMap.clear();
-        suite.removeAttribute(FIXTURE_MAP_KEY);
     }
 
     private String buildInvocationId(ITestResult testResult) {
@@ -108,13 +102,7 @@ public class TestngFixtureManager {
         }
     }
 
-    private static final class TestngFixtureStore implements FixtureStore {
-
-        private final ISuite suite;
-
-        private TestngFixtureStore(ISuite suite) {
-            this.suite = suite;
-        }
+    private record TestngFixtureStore(ISuite suite) implements FixtureStore {
 
         @Override
         public ManagedFixture<?> getOrComputeIfAbsent(String key, Supplier<ManagedFixture<?>> supplier) {
