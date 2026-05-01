@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.junit5examples.dir;
+package io.github.ajmang.tdl.junit5examples.basic;
 
 import io.github.ajmang.fixture.FixtureExtension;
 import io.github.ajmang.tdl.core.fixture.Fixture;

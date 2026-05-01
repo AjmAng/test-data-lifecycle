@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.junit5examples.dir;
+package io.github.ajmang.tdl.junit5examples.basic;
 
 import java.nio.file.Path;
 

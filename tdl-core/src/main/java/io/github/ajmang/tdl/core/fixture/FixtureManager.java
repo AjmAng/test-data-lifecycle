@@ -3,6 +3,7 @@ package io.github.ajmang.tdl.core.fixture;
 import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
+import java.time.Duration;
 
 public class FixtureManager {
 
@@ -76,11 +77,49 @@ public class FixtureManager {
     private <T> ManagedFixture<T> createManagedFixture(FixtureRequest<T> request) {
         try {
             FixtureProvider<T> provider = request.providerType().getDeclaredConstructor().newInstance();
-            T fixture = provider.create();
+            T fixture = createWithRetry(provider, request.fixtureType());
             return getTManagedFixture(fixture, provider);
 
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to create fixture for type: " + request.fixtureType().getName(), e);
+        }
+    }
+
+    private <T> T createWithRetry(FixtureProvider<T> provider, Class<T> fixtureType) {
+        RetryPolicy policy = provider.retryPolicy();
+        int attempts = 0;
+
+        while (attempts < policy.maxAttempts()) {
+            attempts++;
+            try {
+                return provider.create();
+            } catch (Throwable throwable) {
+                boolean canRetry = attempts < policy.maxAttempts() && policy.isRetryable(throwable);
+                if (!canRetry) {
+                    throw new RuntimeException(
+                            "Failed to create fixture for type: "
+                                    + fixtureType.getName()
+                                    + " after "
+                                    + attempts
+                                    + " attempt(s)",
+                            throwable);
+                }
+                sleepBackoff(policy.backoff());
+            }
+        }
+
+        throw new RuntimeException("Failed to create fixture for type: " + fixtureType.getName());
+    }
+
+    private void sleepBackoff(Duration backoff) {
+        if (backoff.isZero() || backoff.isNegative()) {
+            return;
+        }
+        try {
+            Thread.sleep(backoff.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted during fixture retry backoff", e);
         }
     }
 

@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.testngexamples.dir;
+package io.github.ajmang.tdl.testngexamples.basic;
 
 import java.nio.file.Path;
 

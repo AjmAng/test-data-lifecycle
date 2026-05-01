@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.testngexamples.dir;
+package io.github.ajmang.tdl.testngexamples.basic;
 
 import io.github.ajmang.testng.fixture.FixtureListener;
 import io.github.ajmang.tdl.core.fixture.Fixture;
