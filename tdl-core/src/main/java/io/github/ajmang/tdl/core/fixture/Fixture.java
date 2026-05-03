@@ -12,5 +12,6 @@ public @interface Fixture {
 
     Class<? extends ShareStrategy> strategy() default DefaultShareStrategy.class;
 
+    EagerFetch eagerFetch() default EagerFetch.DISABLED;
 }
 

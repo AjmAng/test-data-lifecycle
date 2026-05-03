@@ -1,5 +1,6 @@
 package io.github.ajmang.fixture;
 
+import io.github.ajmang.tdl.core.fixture.EagerFetch;
 import io.github.ajmang.tdl.core.fixture.Fixture;
 import io.github.ajmang.tdl.core.fixture.FixtureScopeContext;
 import org.junit.jupiter.api.extension.*;
@@ -27,7 +28,19 @@ public class FixtureExtension implements
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
+        for (Field field : extensionContext.getRequiredTestClass().getDeclaredFields()) {
+            Fixture fixture = field.getAnnotation(Fixture.class);
+            if (fixture == null || fixture.eagerFetch() != EagerFetch.ENABLED) {
+                continue;
+            }
 
+            InjectionMetadata metadata = new InjectionMetadata(
+                    FixtureScopeContext.InjectionPoint.FIELD,
+                    field.getName(),
+                    null
+            );
+            fixtureManager.getOrCreate(field.getType(), fixture, extensionContext, metadata);
+        }
     }
 
 
