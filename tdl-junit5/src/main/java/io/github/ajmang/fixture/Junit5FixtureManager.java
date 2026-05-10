@@ -24,7 +24,7 @@ public class Junit5FixtureManager {
     private final FixtureManager fixtureManager = new FixtureManager();
 
     public Object getOrCreate(Class<?> type, Fixture annotation, ExtensionContext context, InjectionMetadata metadata) {
-        ExtensionContext scopeContext = context.getRoot();
+        ExtensionContext scopeContext = resolveStoreContext(context, metadata.injectionPoint());
         ExtensionContext.Store junitStore = scopeContext.getStore(NAMESPACE);
         ExtensionContext methodContext = findMethodContext(context);
 
@@ -44,6 +44,13 @@ public class Junit5FixtureManager {
                 Thread.currentThread().getId()
         );
         return fixtureManager.getOrCreate(request, scope, new JunitFixtureStore(junitStore));
+    }
+
+    private ExtensionContext resolveStoreContext(ExtensionContext context, FixtureScopeContext.InjectionPoint injectionPoint) {
+        if (injectionPoint == FixtureScopeContext.InjectionPoint.FIELD) {
+            return findClassContext(context);
+        }
+        return findMethodContext(context);
     }
 
     private Class<? extends ShareStrategy> resolveEffectiveStrategy(io.github.ajmang.tdl.core.fixture.Fixture annotation, ExtensionContext context) {
@@ -88,6 +95,21 @@ public class Junit5FixtureManager {
             current = current.getParent().orElse(null);
         }
         return context;
+    }
+
+    private ExtensionContext findClassContext(ExtensionContext context) {
+        ExtensionContext current = context;
+        ExtensionContext fallback = context;
+        while (current != null) {
+            if (current.getTestClass().isPresent()) {
+                fallback = current;
+                if (current.getTestMethod().isEmpty()) {
+                    return current;
+                }
+            }
+            current = current.getParent().orElse(null);
+        }
+        return fallback;
     }
 
     private record JunitFixtureStore(ExtensionContext.Store store) implements FixtureStore {
