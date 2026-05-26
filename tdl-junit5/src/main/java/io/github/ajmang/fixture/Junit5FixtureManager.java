@@ -3,8 +3,10 @@ package io.github.ajmang.fixture;
 import io.github.ajmang.tdl.core.fixture.*;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,9 +43,32 @@ public class Junit5FixtureManager {
                 metadata.injectionPoint(),
                 metadata.injectionTarget(),
                 metadata.parameterIndex(),
-                Thread.currentThread().getId()
+                Thread.currentThread().getId(),
+                context.getTags(),
+                resolveAnnotationNames(context),
+                resolvePackageName(context.getRequiredTestClass())
         );
         return fixtureManager.getOrCreate(request, scope, new JunitFixtureStore(junitStore));
+    }
+
+    private Set<String> resolveAnnotationNames(ExtensionContext context) {
+        Set<String> names = new LinkedHashSet<>();
+        context.getTestClass().ifPresent(testClass -> {
+            for (Annotation annotation : testClass.getAnnotations()) {
+                names.add(annotation.annotationType().getName());
+            }
+        });
+        context.getTestMethod().ifPresent(testMethod -> {
+            for (Annotation annotation : testMethod.getAnnotations()) {
+                names.add(annotation.annotationType().getName());
+            }
+        });
+        return names;
+    }
+
+    private String resolvePackageName(Class<?> testClass) {
+        Package targetPackage = testClass.getPackage();
+        return targetPackage == null ? null : targetPackage.getName();
     }
 
     private ExtensionContext resolveStoreContext(ExtensionContext context, FixtureScopeContext.InjectionPoint injectionPoint) {
@@ -78,7 +103,7 @@ public class Junit5FixtureManager {
             Class<?> clazz = Class.forName(value.trim());
             if (!ShareStrategy.class.isAssignableFrom(clazz)) {
                 throw new RuntimeException(
-                        "Configured class for key '" + key + "' does not implement FixtureIsolationStrategy: " + value);
+                        "Configured class for key '" + key + "' does not implement ShareStrategy: " + value);
             }
             return (Class<? extends ShareStrategy>) clazz;
         } catch (ClassNotFoundException e) {

@@ -19,11 +19,15 @@ Its main goal is to turn "whether test data is shared, when it is isolated, and 
 ## Design Highlights (Current)
 
 - `@Fixture` focuses on two things: `provider` (how to create resources) and `strategy` (how to decide sharing)
-- The default strategy is method-level isolation (`DefaultIsolationStrategy`) to avoid cross-test contamination
-- Users can define custom `FixtureIsolationStrategy` implementations to bind sharing boundaries to business semantics
+- The default strategy is `DefaultShareStrategy` (safe defaults: field injection can reuse cached fixtures, parameter injection stays isolated)
+- Users can define custom `ShareStrategy` implementations to bind sharing boundaries to business semantics
 - Lifecycle is centrally managed via JUnit 5 store so resources can be cleaned up when scope ends
 
-See detailed design: `docs/shared-strategy-design.md`
+See detailed design:
+
+- `docs/share-strategy-rfc.md`
+- `docs/roadmap-rfc.md`
+- `docs/engine-level-prefetch-rfc.md`
 
 ## Comparison: Testcontainers vs TDL
 

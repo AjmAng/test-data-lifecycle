@@ -5,9 +5,14 @@ import org.testng.ISuite;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -56,7 +61,10 @@ public class TestngFixtureManager {
                 metadata.injectionPoint(),
                 metadata.injectionTarget(),
                 metadata.parameterIndex(),
-                Thread.currentThread().getId()
+                Thread.currentThread().getId(),
+                resolveTags(method),
+                resolveAnnotationNames(testResult),
+                resolvePackageName(testResult)
         );
 
         return fixtureManager.getOrCreate(request, scope, new TestngFixtureStore(suite));
@@ -71,6 +79,38 @@ public class TestngFixtureManager {
 
     private Class<? extends ShareStrategy> resolveEffectiveStrategy(Fixture annotation, ISuite suite) {
         return resolveConfiguredStrategy(suite).orElse(annotation.strategy());
+    }
+
+    private Set<String> resolveTags(ITestNGMethod method) {
+        if (method == null) {
+            return Set.of();
+        }
+        return new LinkedHashSet<>(Arrays.asList(method.getGroups()));
+    }
+
+    private Set<String> resolveAnnotationNames(ITestResult testResult) {
+        Set<String> names = new LinkedHashSet<>();
+        Class<?> testClass = testResult.getTestClass().getRealClass();
+        for (Annotation annotation : testClass.getAnnotations()) {
+            names.add(annotation.annotationType().getName());
+        }
+
+        ITestNGMethod testMethod = testResult.getMethod();
+        if (testMethod != null) {
+            Method method = testMethod.getConstructorOrMethod().getMethod();
+            if (method != null) {
+                for (Annotation annotation : method.getAnnotations()) {
+                    names.add(annotation.annotationType().getName());
+                }
+            }
+        }
+        return names;
+    }
+
+    private String resolvePackageName(ITestResult testResult) {
+        Class<?> testClass = testResult.getTestClass().getRealClass();
+        Package targetPackage = testClass.getPackage();
+        return targetPackage == null ? null : targetPackage.getName();
     }
 
     private Optional<Class<? extends ShareStrategy>> resolveConfiguredStrategy(ISuite suite) {

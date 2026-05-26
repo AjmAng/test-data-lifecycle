@@ -80,7 +80,10 @@ class FixtureManagerRetryTest {
                 FixtureScopeContext.InjectionPoint.PARAMETER,
                 "arg0",
                 0,
-                Thread.currentThread().getId()
+                Thread.currentThread().getId(),
+                java.util.Set.of("retry"),
+                java.util.Set.of("org.junit.jupiter.api.Test"),
+                "io.github.ajmang.tdl.tests"
         );
     }
 
