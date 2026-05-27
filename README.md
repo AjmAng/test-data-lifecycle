@@ -21,6 +21,9 @@ Its main goal is to turn "whether test data is shared, when it is isolated, and 
 - `@Fixture` focuses on two things: `provider` (how to create resources) and `strategy` (how to decide sharing)
 - The default strategy is `DefaultShareStrategy` (safe defaults: field injection can reuse cached fixtures, parameter injection stays isolated)
 - Users can define custom `ShareStrategy` implementations to bind sharing boundaries to business semantics
+- `FixtureScopeContext` keeps a small set of stable fields and an opaque `attributes` map so adapters can pass framework-specific or strategy-specific context without expanding the core API every time
+- Adapters can discover user-defined `FixtureContextCollector` implementations from the test runtime classpath, so teams can collect custom annotation/tag metadata into `attributes` without changing core contracts
+- Cached fixtures retain the `FixtureScopeContext` they were created with, so custom share strategies can compare current demand vs. producer-side context when deciding reuse
 - Lifecycle is centrally managed via JUnit 5 store so resources can be cleaned up when scope ends
 
 See detailed design:

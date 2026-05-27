@@ -6,9 +6,11 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -24,6 +26,15 @@ public class Junit5FixtureManager {
             ExtensionContext.Namespace.create(Junit5FixtureManager.class);
 
     private final FixtureManager fixtureManager = new FixtureManager();
+    private final FixtureContextCollectorRegistry collectorRegistry;
+
+    public Junit5FixtureManager() {
+        this(null);
+    }
+
+    Junit5FixtureManager(FixtureContextCollectorRegistry collectorRegistry) {
+        this.collectorRegistry = collectorRegistry;
+    }
 
     public Object getOrCreate(Class<?> type, Fixture annotation, ExtensionContext context, InjectionMetadata metadata) {
         ExtensionContext scopeContext = resolveStoreContext(context, metadata.injectionPoint());
@@ -46,9 +57,46 @@ public class Junit5FixtureManager {
                 Thread.currentThread().getId(),
                 context.getTags(),
                 resolveAnnotationNames(context),
-                resolvePackageName(context.getRequiredTestClass())
+                resolvePackageName(context.getRequiredTestClass()),
+                resolveAttributes(context, methodContext, metadata)
         );
         return fixtureManager.getOrCreate(request, scope, new JunitFixtureStore(junitStore));
+    }
+
+    private Map<String, Object> resolveAttributes(ExtensionContext context, ExtensionContext methodContext, InjectionMetadata metadata) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("framework", "junit5");
+        attributes.put("junit.tags", new LinkedHashSet<>(context.getTags()));
+        attributes.put("junit.annotations", resolveAnnotationNames(context));
+        attributes.put("junit.packageName", resolvePackageName(context.getRequiredTestClass()));
+        mergeAttributes(attributes, resolveCollectorRegistry(context.getRequiredTestClass().getClassLoader()).collect(
+                new FixtureContextCollectorInput(
+                        "junit5",
+                        context,
+                        context.getRequiredTestClass(),
+                        methodContext.getTestMethod().orElse(null),
+                        metadata.injectionPoint(),
+                        metadata.injectionTarget(),
+                        metadata.parameterIndex()
+                )
+        ));
+        return attributes;
+    }
+
+    private FixtureContextCollectorRegistry resolveCollectorRegistry(ClassLoader classLoader) {
+        if (collectorRegistry != null) {
+            return collectorRegistry;
+        }
+        return FixtureContextCollectorRegistry.load(classLoader);
+    }
+
+    private void mergeAttributes(Map<String, Object> target, Map<String, Object> contributed) {
+        for (Map.Entry<String, Object> entry : contributed.entrySet()) {
+            if (target.containsKey(entry.getKey())) {
+                throw new IllegalStateException("Duplicate fixture context attribute key '" + entry.getKey() + "'");
+            }
+            target.put(entry.getKey(), entry.getValue());
+        }
     }
 
     private Set<String> resolveAnnotationNames(ExtensionContext context) {

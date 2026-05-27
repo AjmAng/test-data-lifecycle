@@ -34,6 +34,7 @@ This RFC documents the current implementation and replaces outdated references t
 - Candidate Fixtures: typed cached fixtures visible to the strategy during selection
 - Managed Fixture: runtime wrapper that owns fixture lifecycle and close behavior
 - Scope Context: request-time metadata used by strategy (`FixtureScopeContext`)
+- Producer Context: the `FixtureScopeContext` snapshot captured when a cached fixture was first created
 
 ## 5. Layering and Responsibilities
 
@@ -42,6 +43,7 @@ This RFC documents the current implementation and replaces outdated references t
 - Defines common contracts: `FixtureProvider`, `ShareStrategy`, `FixtureScopeContext`, `FixtureRequest`, `FixtureStore`
 - Owns orchestration in `FixtureManager`: strategy resolution, candidate collection, reuse decision, fixture creation, conditional caching
 - Does not depend on JUnit APIs
+- `FixtureScopeContext` keeps stable core fields, plus an opaque `attributes` map for framework- or strategy-specific context data
 
 ### 5.2 `tdl-junit5`
 
@@ -49,6 +51,7 @@ This RFC documents the current implementation and replaces outdated references t
 - Builds `FixtureScopeContext` from `ExtensionContext` + `InjectionMetadata`
 - Adapts JUnit store to `FixtureStore` via `Junit5FixtureManager`
 - Uses `ExtensionContext.Store.CloseableResource` for lifecycle cleanup
+- Discovers additional `FixtureContextCollector` implementations from the test runtime classpath and merges their contributions into `FixtureScopeContext.attributes`
 
 ## 6. Core API (Current Implementation)
 
@@ -78,6 +81,14 @@ public interface ShareStrategy {
 - `injectionTarget`
 - `parameterIndex`
 - `threadId`
+- `tags`
+- `annotations`
+- `packageName`
+- `attributes` (opaque `Map<String, Object>` for extra context)
+
+Current adapters populate `attributes` with framework-specific keys such as `framework`, `junit.tags`, `junit.annotations`, `junit.packageName`, `testng.groups`, `testng.annotations`, and `testng.packageName`.
+
+In addition, users can contribute extra namespaced attributes by implementing `FixtureContextCollector` and exposing it through `ServiceLoader`. Collectors are framework-aware, ordered, and rejected if they contribute duplicate attribute keys in the same request.
 
 ### 6.3 Store contract (`tdl-core`)
 
@@ -106,6 +117,8 @@ The built-in `DefaultShareStrategy` behavior is:
 - non-`PARAMETER` injection (currently `FIELD`): reuse first available candidate and cache newly created fixtures
 
 Note: this is current behavior, not a long-term final policy contract.
+
+Cached `ManagedFixture` instances now retain their producer context, which allows custom strategies to compare current consumer attributes with the attributes that were present when a candidate fixture was created.
 
 ## 8. JUnit 5 Effective Strategy Resolution
 

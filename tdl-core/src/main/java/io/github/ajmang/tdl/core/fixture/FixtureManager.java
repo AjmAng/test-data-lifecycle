@@ -7,8 +7,12 @@ import java.time.Duration;
 
 public class FixtureManager {
 
-    private static <T> ManagedFixture<T> getTManagedFixture(T fixture, FixtureProvider<T> provider) {
-        return new ManagedFixture<>(fixture, provider);
+    private static <T> ManagedFixture<T> getTManagedFixture(
+            T fixture,
+            FixtureProvider<T> provider,
+            FixtureScopeContext scopeContext
+    ) {
+        return new ManagedFixture<>(fixture, provider, scopeContext);
     }
 
     public <T> T getOrCreate(FixtureRequest<T> request, FixtureScopeContext scopeContext, FixtureStore store) {
@@ -20,7 +24,7 @@ public class FixtureManager {
                 return castFixture(selected.get().fixture(), request.fixtureType());
             }
 
-            ManagedFixture<T> createdFixture = createManagedFixture(request);
+            ManagedFixture<T> createdFixture = createManagedFixture(request, scopeContext);
             if (strategy.shouldCacheCreatedFixture(scopeContext)) {
                 String cacheKey = buildCacheKey(request, scopeContext);
                 store.put(cacheKey, createdFixture);
@@ -74,11 +78,11 @@ public class FixtureManager {
         }
     }
 
-    private <T> ManagedFixture<T> createManagedFixture(FixtureRequest<T> request) {
+    private <T> ManagedFixture<T> createManagedFixture(FixtureRequest<T> request, FixtureScopeContext scopeContext) {
         try {
             FixtureProvider<T> provider = request.providerType().getDeclaredConstructor().newInstance();
             T fixture = createWithRetry(provider, request.fixtureType());
-            return getTManagedFixture(fixture, provider);
+            return getTManagedFixture(fixture, provider, scopeContext);
 
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to create fixture for type: " + request.fixtureType().getName(), e);

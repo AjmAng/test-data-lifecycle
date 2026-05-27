@@ -83,7 +83,8 @@ class FixtureManagerRetryTest {
                 Thread.currentThread().getId(),
                 java.util.Set.of("retry"),
                 java.util.Set.of("org.junit.jupiter.api.Test"),
-                "io.github.ajmang.tdl.tests"
+                "io.github.ajmang.tdl.tests",
+                Map.of("scenario", "retry")
         );
     }
 

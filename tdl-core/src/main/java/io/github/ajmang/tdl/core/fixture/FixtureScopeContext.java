@@ -1,7 +1,9 @@
 package io.github.ajmang.tdl.core.fixture;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 public record FixtureScopeContext(
@@ -15,12 +17,14 @@ public record FixtureScopeContext(
         long threadId,
         Set<String> tags,
         Set<String> annotations,
-        String packageName
+        String packageName,
+        Map<String, Object> attributes
 ) {
 
     public FixtureScopeContext {
         tags = tags == null ? Set.of() : Collections.unmodifiableSet(new LinkedHashSet<>(tags));
         annotations = annotations == null ? Set.of() : Collections.unmodifiableSet(new LinkedHashSet<>(annotations));
+        attributes = attributes == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(attributes));
     }
 
 

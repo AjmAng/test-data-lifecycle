@@ -9,9 +9,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -27,6 +29,15 @@ public class TestngFixtureManager {
     private static final String FIXTURE_MAP_KEY = TestngFixtureManager.class.getName() + ".fixtures";
 
     private final FixtureManager fixtureManager = new FixtureManager();
+    private final FixtureContextCollectorRegistry collectorRegistry;
+
+    public TestngFixtureManager() {
+        this(null);
+    }
+
+    TestngFixtureManager(FixtureContextCollectorRegistry collectorRegistry) {
+        this.collectorRegistry = collectorRegistry;
+    }
 
     public static void closeAll(ISuite suite) {
         Object stored = suite.getAttribute(FIXTURE_MAP_KEY);
@@ -64,10 +75,54 @@ public class TestngFixtureManager {
                 Thread.currentThread().getId(),
                 resolveTags(method),
                 resolveAnnotationNames(testResult),
-                resolvePackageName(testResult)
+                resolvePackageName(testResult),
+                resolveAttributes(method, testResult, metadata)
         );
 
         return fixtureManager.getOrCreate(request, scope, new TestngFixtureStore(suite));
+    }
+
+    private Map<String, Object> resolveAttributes(ITestNGMethod method, ITestResult testResult, InjectionMetadata metadata) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("framework", "testng");
+        attributes.put("testng.groups", resolveTags(method));
+        attributes.put("testng.annotations", resolveAnnotationNames(testResult));
+        attributes.put("testng.packageName", resolvePackageName(testResult));
+        mergeAttributes(attributes, resolveCollectorRegistry(testResult.getTestClass().getRealClass().getClassLoader()).collect(
+                new FixtureContextCollectorInput(
+                        "testng",
+                        testResult,
+                        testResult.getTestClass().getRealClass(),
+                        resolveJavaMethod(method),
+                        metadata.injectionPoint(),
+                        metadata.injectionTarget(),
+                        metadata.parameterIndex()
+                )
+        ));
+        return attributes;
+    }
+
+    private Method resolveJavaMethod(ITestNGMethod method) {
+        if (method == null) {
+            return null;
+        }
+        return method.getConstructorOrMethod().getMethod();
+    }
+
+    private FixtureContextCollectorRegistry resolveCollectorRegistry(ClassLoader classLoader) {
+        if (collectorRegistry != null) {
+            return collectorRegistry;
+        }
+        return FixtureContextCollectorRegistry.load(classLoader);
+    }
+
+    private void mergeAttributes(Map<String, Object> target, Map<String, Object> contributed) {
+        for (Map.Entry<String, Object> entry : contributed.entrySet()) {
+            if (target.containsKey(entry.getKey())) {
+                throw new IllegalStateException("Duplicate fixture context attribute key '" + entry.getKey() + "'");
+            }
+            target.put(entry.getKey(), entry.getValue());
+        }
     }
 
     private String buildInvocationId(ITestResult testResult) {
@@ -97,7 +152,7 @@ public class TestngFixtureManager {
 
         ITestNGMethod testMethod = testResult.getMethod();
         if (testMethod != null) {
-            Method method = testMethod.getConstructorOrMethod().getMethod();
+            Method method = resolveJavaMethod(testMethod);
             if (method != null) {
                 for (Annotation annotation : method.getAnnotations()) {
                     names.add(annotation.annotationType().getName());
