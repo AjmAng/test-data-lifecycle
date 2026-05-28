@@ -88,11 +88,12 @@ public class TestngFixtureManager {
         attributes.put("testng.groups", resolveTags(method));
         attributes.put("testng.annotations", resolveAnnotationNames(testResult));
         attributes.put("testng.packageName", resolvePackageName(testResult));
-        mergeAttributes(attributes, resolveCollectorRegistry(testResult.getTestClass().getRealClass().getClassLoader()).collect(
+        Class<?> testClass = testResult.getTestClass().getRealClass();
+        mergeAttributes(attributes, resolveCollectorRegistry(testClass, testClass.getClassLoader()).collect(
                 new FixtureContextCollectorInput(
                         "testng",
                         testResult,
-                        testResult.getTestClass().getRealClass(),
+                        testClass,
                         resolveJavaMethod(method),
                         metadata.injectionPoint(),
                         metadata.injectionTarget(),
@@ -109,11 +110,36 @@ public class TestngFixtureManager {
         return method.getConstructorOrMethod().getMethod();
     }
 
-    private FixtureContextCollectorRegistry resolveCollectorRegistry(ClassLoader classLoader) {
+    private FixtureContextCollectorRegistry resolveCollectorRegistry(Class<?> testClass, ClassLoader classLoader) {
         if (collectorRegistry != null) {
             return collectorRegistry;
         }
+        FixtureContextCollectorRegistry fromAnnotation = resolveCollectorRegistryFromAnnotation(testClass);
+        if (fromAnnotation != null) {
+            return fromAnnotation;
+        }
         return FixtureContextCollectorRegistry.load(classLoader);
+    }
+
+    private FixtureContextCollectorRegistry resolveCollectorRegistryFromAnnotation(Class<?> testClass) {
+        UseFixtureCollectors useFixtureCollectors = testClass.getAnnotation(UseFixtureCollectors.class);
+        if (useFixtureCollectors == null || useFixtureCollectors.value().length == 0) {
+            return null;
+        }
+
+        List<FixtureContextCollector> collectors = new ArrayList<>(useFixtureCollectors.value().length);
+        for (Class<? extends FixtureContextCollector> collectorType : useFixtureCollectors.value()) {
+            collectors.add(instantiateCollector(collectorType));
+        }
+        return FixtureContextCollectorRegistry.of(collectors);
+    }
+
+    private FixtureContextCollector instantiateCollector(Class<? extends FixtureContextCollector> collectorType) {
+        try {
+            return collectorType.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Failed to instantiate collector: " + collectorType.getName(), e);
+        }
     }
 
     private void mergeAttributes(Map<String, Object> target, Map<String, Object> contributed) {
@@ -133,7 +159,11 @@ public class TestngFixtureManager {
     }
 
     private Class<? extends ShareStrategy> resolveEffectiveStrategy(Fixture annotation, ISuite suite) {
-        return resolveConfiguredStrategy(suite).orElse(annotation.strategy());
+        Class<? extends ShareStrategy> annotationStrategy = annotation.strategy();
+        if (!DefaultShareStrategy.class.equals(annotationStrategy)) {
+            return annotationStrategy;
+        }
+        return resolveConfiguredStrategy(suite).orElse(annotationStrategy);
     }
 
     private Set<String> resolveTags(ITestNGMethod method) {

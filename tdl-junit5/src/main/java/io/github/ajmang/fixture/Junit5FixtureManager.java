@@ -69,11 +69,12 @@ public class Junit5FixtureManager {
         attributes.put("junit.tags", new LinkedHashSet<>(context.getTags()));
         attributes.put("junit.annotations", resolveAnnotationNames(context));
         attributes.put("junit.packageName", resolvePackageName(context.getRequiredTestClass()));
-        mergeAttributes(attributes, resolveCollectorRegistry(context.getRequiredTestClass().getClassLoader()).collect(
+        Class<?> testClass = context.getRequiredTestClass();
+        mergeAttributes(attributes, resolveCollectorRegistry(testClass, testClass.getClassLoader()).collect(
                 new FixtureContextCollectorInput(
                         "junit5",
                         context,
-                        context.getRequiredTestClass(),
+                        testClass,
                         methodContext.getTestMethod().orElse(null),
                         metadata.injectionPoint(),
                         metadata.injectionTarget(),
@@ -83,11 +84,36 @@ public class Junit5FixtureManager {
         return attributes;
     }
 
-    private FixtureContextCollectorRegistry resolveCollectorRegistry(ClassLoader classLoader) {
+    private FixtureContextCollectorRegistry resolveCollectorRegistry(Class<?> testClass, ClassLoader classLoader) {
         if (collectorRegistry != null) {
             return collectorRegistry;
         }
+        FixtureContextCollectorRegistry fromAnnotation = resolveCollectorRegistryFromAnnotation(testClass);
+        if (fromAnnotation != null) {
+            return fromAnnotation;
+        }
         return FixtureContextCollectorRegistry.load(classLoader);
+    }
+
+    private FixtureContextCollectorRegistry resolveCollectorRegistryFromAnnotation(Class<?> testClass) {
+        UseFixtureCollectors useFixtureCollectors = testClass.getAnnotation(UseFixtureCollectors.class);
+        if (useFixtureCollectors == null || useFixtureCollectors.value().length == 0) {
+            return null;
+        }
+
+        List<FixtureContextCollector> collectors = new ArrayList<>(useFixtureCollectors.value().length);
+        for (Class<? extends FixtureContextCollector> collectorType : useFixtureCollectors.value()) {
+            collectors.add(instantiateCollector(collectorType));
+        }
+        return FixtureContextCollectorRegistry.of(collectors);
+    }
+
+    private FixtureContextCollector instantiateCollector(Class<? extends FixtureContextCollector> collectorType) {
+        try {
+            return collectorType.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Failed to instantiate collector: " + collectorType.getName(), e);
+        }
     }
 
     private void mergeAttributes(Map<String, Object> target, Map<String, Object> contributed) {
@@ -127,7 +153,11 @@ public class Junit5FixtureManager {
     }
 
     private Class<? extends ShareStrategy> resolveEffectiveStrategy(io.github.ajmang.tdl.core.fixture.Fixture annotation, ExtensionContext context) {
-        return resolveConfiguredStrategy(context).orElse(annotation.strategy());
+        Class<? extends ShareStrategy> annotationStrategy = annotation.strategy();
+        if (!DefaultShareStrategy.class.equals(annotationStrategy)) {
+            return annotationStrategy;
+        }
+        return resolveConfiguredStrategy(context).orElse(annotationStrategy);
     }
 
     private Optional<Class<? extends ShareStrategy>> resolveConfiguredStrategy(ExtensionContext context) {

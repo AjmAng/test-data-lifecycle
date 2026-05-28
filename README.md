@@ -23,7 +23,9 @@ Its main goal is to turn "whether test data is shared, when it is isolated, and 
 - Users can define custom `ShareStrategy` implementations to bind sharing boundaries to business semantics
 - `FixtureScopeContext` keeps a small set of stable fields and an opaque `attributes` map so adapters can pass framework-specific or strategy-specific context without expanding the core API every time
 - Adapters can discover user-defined `FixtureContextCollector` implementations from the test runtime classpath, so teams can collect custom annotation/tag metadata into `attributes` without changing core contracts
+- Tests can explicitly bind collectors with `@UseFixtureCollectors(...)` on the test class, which serves as a local extension entrypoint and takes precedence over adapter-side `ServiceLoader` discovery
 - Cached fixtures retain the `FixtureScopeContext` they were created with, so custom share strategies can compare current demand vs. producer-side context when deciding reuse
+- End-to-end custom context example: `examples/src/test/java/io/github/ajmang/tdl/junit5examples/biztag/BizTagHierarchyShareStrategyTest.java` demonstrates `@BizTag` collection via `ServiceLoader` and hierarchy-based sharing decisions
 - Lifecycle is centrally managed via JUnit 5 store so resources can be cleaned up when scope ends
 
 See detailed design:

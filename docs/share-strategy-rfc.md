@@ -51,7 +51,8 @@ This RFC documents the current implementation and replaces outdated references t
 - Builds `FixtureScopeContext` from `ExtensionContext` + `InjectionMetadata`
 - Adapts JUnit store to `FixtureStore` via `Junit5FixtureManager`
 - Uses `ExtensionContext.Store.CloseableResource` for lifecycle cleanup
-- Discovers additional `FixtureContextCollector` implementations from the test runtime classpath and merges their contributions into `FixtureScopeContext.attributes`
+- Supports explicit collector binding via `@UseFixtureCollectors(...)` on the test class
+- Falls back to `ServiceLoader` discovery from the test runtime classpath when no class-level collector annotation is present
 
 ## 6. Core API (Current Implementation)
 
@@ -88,7 +89,7 @@ public interface ShareStrategy {
 
 Current adapters populate `attributes` with framework-specific keys such as `framework`, `junit.tags`, `junit.annotations`, `junit.packageName`, `testng.groups`, `testng.annotations`, and `testng.packageName`.
 
-In addition, users can contribute extra namespaced attributes by implementing `FixtureContextCollector` and exposing it through `ServiceLoader`. Collectors are framework-aware, ordered, and rejected if they contribute duplicate attribute keys in the same request.
+In addition, users can contribute extra namespaced attributes by implementing `FixtureContextCollector` and either binding it explicitly with `@UseFixtureCollectors(...)` or exposing it through `ServiceLoader`. Collectors are framework-aware, ordered, and rejected if they contribute duplicate attribute keys in the same request.
 
 ### 6.3 Store contract (`tdl-core`)
 
@@ -124,15 +125,16 @@ Cached `ManagedFixture` instances now retain their producer context, which allow
 
 Current `Junit5FixtureManager` behavior:
 
-1. Try global configured strategy class from configuration/system keys
-2. Otherwise use annotation strategy (`@Fixture(strategy = ...)`)
+1. If `@Fixture(strategy = ...)` is explicitly set to a non-default strategy, use it.
+2. Otherwise resolve configured default strategy class from configuration/system keys.
+3. Fallback to `DefaultShareStrategy`.
 
 Configuration keys:
 
 - `tdl.fixture.default-strategy-class`
 - compatibility key: `tdl.junit5.fixture.default-strategy-class`
 
-Important: in current implementation, global configuration overrides annotation strategy when present.
+Important: configured defaults are only applied when the annotation keeps the default strategy.
 
 ## 9. Execution Model (Current)
 
@@ -180,7 +182,6 @@ Current store placement is root-context-based; hierarchical store selection is f
 
 ## 12. Open Questions
 
-- Should global strategy always override annotation strategy, or should annotation take precedence?
 - Should candidate selection be narrowed by stronger built-in filtering (for example provider identity), not only fixture type?
 - Should compatibility key `tdl.junit5.fixture.default-strategy-class` remain beyond `1.1.x`?
 
