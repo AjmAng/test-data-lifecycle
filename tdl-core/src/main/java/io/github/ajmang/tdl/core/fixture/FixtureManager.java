@@ -62,10 +62,10 @@ public class FixtureManager {
     }
 
     private String safeScopeId(FixtureScopeContext scopeContext) {
-        if (scopeContext == null || scopeContext.junitUniqueId() == null) {
+        if (scopeContext == null || scopeContext.scopeId() == null) {
             return "global";
         }
-        return scopeContext.junitUniqueId();
+        return scopeContext.scopeId();
     }
 
     private ShareStrategy resolveStrategy(Class<? extends ShareStrategy> strategyType) {

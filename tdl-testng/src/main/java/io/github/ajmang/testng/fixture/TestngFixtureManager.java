@@ -57,6 +57,13 @@ public class TestngFixtureManager {
     public Object getOrCreate(Class<?> type, Fixture annotation, ITestResult testResult, InjectionMetadata metadata) {
         ISuite suite = testResult.getTestContext().getSuite();
         ITestNGMethod method = testResult.getMethod();
+        Class<?> testClass = testResult.getTestClass().getRealClass();
+        String testClassName = testClass.getName();
+        String testMethodName = method != null ? method.getMethodName() : null;
+        String scopeId = buildInvocationId(testResult);
+        Set<String> tags = resolveTags(method);
+        Set<String> annotations = resolveAnnotationNames(testResult);
+        String packageName = resolvePackageName(testResult);
 
         FixtureRequest<?> request = FixtureRequest.of(
                 type,
@@ -65,30 +72,59 @@ public class TestngFixtureManager {
         );
 
         FixtureScopeContext scope = new FixtureScopeContext(
-                suite.getName(),
-                testResult.getTestClass().getRealClass().getName(),
-                method != null ? method.getMethodName() : null,
-                buildInvocationId(testResult),
+                scopeId,
                 metadata.injectionPoint(),
                 metadata.injectionTarget(),
                 metadata.parameterIndex(),
-                Thread.currentThread().getId(),
-                resolveTags(method),
-                resolveAnnotationNames(testResult),
-                resolvePackageName(testResult),
-                resolveAttributes(method, testResult, metadata)
+                resolveAttributes(
+                        suite,
+                        method,
+                        testResult,
+                        metadata,
+                        testClass,
+                        testClassName,
+                        testMethodName,
+                        Thread.currentThread().getId(),
+                        tags,
+                        annotations,
+                        packageName
+                )
         );
 
         return fixtureManager.getOrCreate(request, scope, new TestngFixtureStore(suite));
     }
 
-    private Map<String, Object> resolveAttributes(ITestNGMethod method, ITestResult testResult, InjectionMetadata metadata) {
+    private Map<String, Object> resolveAttributes(
+            ISuite suite,
+            ITestNGMethod method,
+            ITestResult testResult,
+            InjectionMetadata metadata,
+            Class<?> testClass,
+            String testClassName,
+            String testMethodName,
+            long threadId,
+            Set<String> tags,
+            Set<String> annotations,
+            String packageName
+    ) {
         Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put(FixtureScopeContext.ATTR_ENGINE_RUN_ID, suite.getName());
+        attributes.put(FixtureScopeContext.ATTR_TEST_CLASS_NAME, testClassName);
+        if (testMethodName != null) {
+            attributes.put(FixtureScopeContext.ATTR_TEST_METHOD_NAME, testMethodName);
+        }
+        attributes.put(FixtureScopeContext.ATTR_THREAD_ID, threadId);
+        attributes.put(FixtureScopeContext.ATTR_TAGS, new LinkedHashSet<>(tags));
+        attributes.put(FixtureScopeContext.ATTR_ANNOTATIONS, new LinkedHashSet<>(annotations));
+        if (packageName != null) {
+            attributes.put(FixtureScopeContext.ATTR_PACKAGE_NAME, packageName);
+        }
         attributes.put("framework", "testng");
-        attributes.put("testng.groups", resolveTags(method));
-        attributes.put("testng.annotations", resolveAnnotationNames(testResult));
-        attributes.put("testng.packageName", resolvePackageName(testResult));
-        Class<?> testClass = testResult.getTestClass().getRealClass();
+        attributes.put("testng.groups", new LinkedHashSet<>(tags));
+        attributes.put("testng.annotations", new LinkedHashSet<>(annotations));
+        if (packageName != null) {
+            attributes.put("testng.packageName", packageName);
+        }
         mergeAttributes(attributes, resolveCollectorRegistry(testClass, testClass.getClassLoader()).collect(
                 new FixtureContextCollectorInput(
                         "testng",

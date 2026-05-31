@@ -47,5 +47,42 @@ class FixtureScopeContextTest {
         Assertions.assertThrows(UnsupportedOperationException.class, () -> context.annotations().add("ann-d"));
         Assertions.assertThrows(UnsupportedOperationException.class, () -> context.attributes().put("x", "y"));
     }
+
+    @Test
+    void legacyAccessorsReadFromAttributesInLeanContext() {
+        Set<String> tags = new LinkedHashSet<>(List.of("g1", "g2"));
+        Set<String> annotations = new LinkedHashSet<>(List.of("a1", "a2"));
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put(FixtureScopeContext.ATTR_ENGINE_RUN_ID, "run-2");
+        attributes.put(FixtureScopeContext.ATTR_TEST_CLASS_NAME, "example.TestClass");
+        attributes.put(FixtureScopeContext.ATTR_TEST_METHOD_NAME, "testMethod");
+        attributes.put(FixtureScopeContext.ATTR_THREAD_ID, 7L);
+        attributes.put(FixtureScopeContext.ATTR_TAGS, tags);
+        attributes.put(FixtureScopeContext.ATTR_ANNOTATIONS, annotations);
+        attributes.put(FixtureScopeContext.ATTR_PACKAGE_NAME, "example");
+
+        FixtureScopeContext context = new FixtureScopeContext(
+                "scope-1",
+                FixtureScopeContext.InjectionPoint.PARAMETER,
+                "arg0",
+                0,
+                attributes
+        );
+
+        tags.add("g3");
+        annotations.add("a3");
+
+        Assertions.assertEquals("scope-1", context.scopeId());
+        Assertions.assertEquals("scope-1", context.junitUniqueId());
+        Assertions.assertEquals("run-2", context.engineRunId());
+        Assertions.assertEquals("example.TestClass", context.testClassName());
+        Assertions.assertEquals("testMethod", context.testMethodName());
+        Assertions.assertEquals(7L, context.threadId());
+        Assertions.assertEquals(new LinkedHashSet<>(List.of("g1", "g2")), context.tags());
+        Assertions.assertEquals(new LinkedHashSet<>(List.of("a1", "a2")), context.annotations());
+        Assertions.assertEquals("example", context.packageName());
+        Assertions.assertThrows(UnsupportedOperationException.class, () -> context.tags().add("g4"));
+        Assertions.assertThrows(UnsupportedOperationException.class, () -> context.annotations().add("a4"));
+    }
 }
 

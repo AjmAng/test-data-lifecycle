@@ -46,29 +46,61 @@ public class Junit5FixtureManager {
                 annotation.provider(),
                 resolveEffectiveStrategy(annotation, context)
         );
+        String engineRunId = scopeContext.getUniqueId();
+        String testClassName = context.getRequiredTestClass().getName();
+        String testMethodName = methodContext.getTestMethod().map(Method::getName).orElse(null);
+        String scopeId = methodContext.getUniqueId();
         FixtureScopeContext scope = new FixtureScopeContext(
-                scopeContext.getUniqueId(),
-                context.getRequiredTestClass().getName(),
-                methodContext.getTestMethod().map(Method::getName).orElse(null),
-                methodContext.getUniqueId(),
+                scopeId,
                 metadata.injectionPoint(),
                 metadata.injectionTarget(),
                 metadata.parameterIndex(),
-                Thread.currentThread().getId(),
-                context.getTags(),
-                resolveAnnotationNames(context),
-                resolvePackageName(context.getRequiredTestClass()),
-                resolveAttributes(context, methodContext, metadata)
+                resolveAttributes(
+                        context,
+                        methodContext,
+                        metadata,
+                        engineRunId,
+                        testClassName,
+                        testMethodName,
+                        Thread.currentThread().getId(),
+                        context.getTags(),
+                        resolveAnnotationNames(context),
+                        resolvePackageName(context.getRequiredTestClass())
+                )
         );
         return fixtureManager.getOrCreate(request, scope, new JunitFixtureStore(junitStore));
     }
 
-    private Map<String, Object> resolveAttributes(ExtensionContext context, ExtensionContext methodContext, InjectionMetadata metadata) {
+    private Map<String, Object> resolveAttributes(
+            ExtensionContext context,
+            ExtensionContext methodContext,
+            InjectionMetadata metadata,
+            String engineRunId,
+            String testClassName,
+            String testMethodName,
+            long threadId,
+            Set<String> tags,
+            Set<String> annotations,
+            String packageName
+    ) {
         Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put(FixtureScopeContext.ATTR_ENGINE_RUN_ID, engineRunId);
+        attributes.put(FixtureScopeContext.ATTR_TEST_CLASS_NAME, testClassName);
+        if (testMethodName != null) {
+            attributes.put(FixtureScopeContext.ATTR_TEST_METHOD_NAME, testMethodName);
+        }
+        attributes.put(FixtureScopeContext.ATTR_THREAD_ID, threadId);
+        attributes.put(FixtureScopeContext.ATTR_TAGS, new LinkedHashSet<>(tags));
+        attributes.put(FixtureScopeContext.ATTR_ANNOTATIONS, new LinkedHashSet<>(annotations));
+        if (packageName != null) {
+            attributes.put(FixtureScopeContext.ATTR_PACKAGE_NAME, packageName);
+        }
         attributes.put("framework", "junit5");
-        attributes.put("junit.tags", new LinkedHashSet<>(context.getTags()));
-        attributes.put("junit.annotations", resolveAnnotationNames(context));
-        attributes.put("junit.packageName", resolvePackageName(context.getRequiredTestClass()));
+        attributes.put("junit.tags", new LinkedHashSet<>(tags));
+        attributes.put("junit.annotations", new LinkedHashSet<>(annotations));
+        if (packageName != null) {
+            attributes.put("junit.packageName", packageName);
+        }
         Class<?> testClass = context.getRequiredTestClass();
         mergeAttributes(attributes, resolveCollectorRegistry(testClass, testClass.getClassLoader()).collect(
                 new FixtureContextCollectorInput(

@@ -24,6 +24,6 @@ public interface FixtureContextCollector {
     /**
      * Collects additional attributes to merge into {@link FixtureScopeContext#attributes()}.
      */
-    Map<String, Object> collect(io.github.ajmang.tdl.core.fixture.FixtureContextCollectorInput input);
+    Map<String, Object> collect(FixtureContextCollectorInput input);
 }
 
