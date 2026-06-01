@@ -27,7 +27,7 @@ This document captures the current implementation gap analysis and the next exec
 
 ### P1
 
-- [ ] `CleanupPolicy` and related store operations (`remove`, `destroy`)
+
 - [ ] Broaden regression coverage for adapter behavior and strategy precedence
 - [ ] Add examples for retry, eager fetch, tag/group sharing, cleanup behavior
 - [ ] Add module-level usage docs for JUnit5/TestNG integration details
