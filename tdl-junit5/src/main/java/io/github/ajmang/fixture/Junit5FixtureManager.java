@@ -49,6 +49,7 @@ public class Junit5FixtureManager {
         String engineRunId = scopeContext.getUniqueId();
         String testClassName = context.getRequiredTestClass().getName();
         String testMethodName = methodContext.getTestMethod().map(Method::getName).orElse(null);
+        Set<String> fixtureTags = resolveFixtureTags(context);
         String scopeId = methodContext.getUniqueId();
         FixtureScopeContext scope = new FixtureScopeContext(
                 scopeId,
@@ -63,7 +64,7 @@ public class Junit5FixtureManager {
                         testClassName,
                         testMethodName,
                         Thread.currentThread().getId(),
-                        context.getTags(),
+                        fixtureTags,
                         resolveAnnotationNames(context),
                         resolvePackageName(context.getRequiredTestClass())
                 )
@@ -170,6 +171,28 @@ public class Junit5FixtureManager {
             }
         });
         return names;
+    }
+
+    private Set<String> resolveFixtureTags(ExtensionContext context) {
+        Set<String> tags = new LinkedHashSet<>();
+        context.getTestClass().ifPresent(testClass -> collectFixtureTags(testClass.getAnnotation(FixtureTags.class), tags));
+        context.getTestMethod().ifPresent(testMethod -> collectFixtureTags(testMethod.getAnnotation(FixtureTags.class), tags));
+        return tags;
+    }
+
+    private void collectFixtureTags(FixtureTags fixtureTags, Set<String> target) {
+        if (fixtureTags == null || fixtureTags.value().length == 0) {
+            return;
+        }
+        for (String rawTag : fixtureTags.value()) {
+            if (rawTag == null) {
+                continue;
+            }
+            String normalized = rawTag.trim();
+            if (!normalized.isEmpty()) {
+                target.add(normalized);
+            }
+        }
     }
 
     private String resolvePackageName(Class<?> testClass) {

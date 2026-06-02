@@ -51,6 +51,73 @@ class SharedByTagStrategyTest {
     }
 
     @Test
+    void combinedTagFixtureShouldServeSingleTagConsumers() {
+        CountingProvider.creations.set(0);
+
+        FixtureRequest<String> request = FixtureRequest.of(
+                String.class,
+                CountingProvider.class,
+                SharedByTagStrategy.class
+        );
+
+        String combined = fixtureManager.getOrCreate(request, fieldScope("scope-ab", Set.of("TagA", "TagB")), fixtureStore);
+        String tagAOnly = fixtureManager.getOrCreate(request, fieldScope("scope-a", Set.of("TagA")), fixtureStore);
+        String tagBOnly = fixtureManager.getOrCreate(request, fieldScope("scope-b", Set.of("TagB")), fixtureStore);
+
+        Assertions.assertSame(combined, tagAOnly);
+        Assertions.assertSame(combined, tagBOnly);
+        Assertions.assertEquals(1, CountingProvider.creations.get());
+    }
+
+    @Test
+    void splitTagFixturesShouldNotServeCombinedTagConsumer() {
+        CountingProvider.creations.set(0);
+
+        FixtureRequest<String> request = FixtureRequest.of(
+                String.class,
+                CountingProvider.class,
+                SharedByTagStrategy.class
+        );
+
+        String tagAOnly = fixtureManager.getOrCreate(request, fieldScope("scope-a", Set.of("TagA")), fixtureStore);
+        String tagBOnly = fixtureManager.getOrCreate(request, fieldScope("scope-b", Set.of("TagB")), fixtureStore);
+        String combined = fixtureManager.getOrCreate(request, fieldScope("scope-ab", Set.of("TagA", "TagB")), fixtureStore);
+
+        Assertions.assertNotSame(tagAOnly, combined);
+        Assertions.assertNotSame(tagBOnly, combined);
+        Assertions.assertEquals(3, CountingProvider.creations.get());
+    }
+
+    @Test
+    void shouldFollowRequestedTagSharingRules() {
+        CountingProvider.creations.set(0);
+
+        FixtureRequest<String> request = FixtureRequest.of(
+                String.class,
+                CountingProvider.class,
+                SharedByTagStrategy.class
+        );
+
+        String combinedProducer = fixtureManager.getOrCreate(request, fieldScope("scope-ab", Set.of("TagA", "TagB")), fixtureStore);
+        String tagAConsumer = fixtureManager.getOrCreate(request, fieldScope("scope-a", Set.of("TagA")), fixtureStore);
+        String tagBConsumer = fixtureManager.getOrCreate(request, fieldScope("scope-b", Set.of("TagB")), fixtureStore);
+
+        Assertions.assertSame(combinedProducer, tagAConsumer);
+        Assertions.assertSame(combinedProducer, tagBConsumer);
+
+        InMemoryFixtureStore splitStore = new InMemoryFixtureStore();
+        CountingProvider.creations.set(0);
+
+        String onlyTagA = fixtureManager.getOrCreate(request, fieldScope("scope-a-1", Set.of("TagA")), splitStore);
+        String onlyTagB = fixtureManager.getOrCreate(request, fieldScope("scope-b-1", Set.of("TagB")), splitStore);
+        String combinedConsumer = fixtureManager.getOrCreate(request, fieldScope("scope-ab-1", Set.of("TagA", "TagB")), splitStore);
+
+        Assertions.assertNotSame(onlyTagA, combinedConsumer);
+        Assertions.assertNotSame(onlyTagB, combinedConsumer);
+        Assertions.assertEquals(3, CountingProvider.creations.get());
+    }
+
+    @Test
     void parameterInjectionShouldStayIsolatedEvenWithSameTag() {
         CountingProvider.creations.set(0);
 

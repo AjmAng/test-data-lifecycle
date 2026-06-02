@@ -1,11 +1,17 @@
 package io.github.ajmang.tdl.core.fixture;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Shares fixtures by framework tags/groups using superset matching.
+ * Rule 1: A producer with tags {A,B} can serve consumers needing {A} or {B}.
+ * Rule 2: Producers {A} and {B} cannot serve a consumer needing {A,B}; a new fixture is created.
+ */
 public class SharedByTagStrategy implements ShareStrategy {
 
     private static final String[] TAG_KEYS = new String[] {
@@ -31,8 +37,8 @@ public class SharedByTagStrategy implements ShareStrategy {
 
         return candidates.stream()
                 .filter(candidate -> candidate.producerContext() != null)
-                .filter(candidate -> hasCommonTag(tagsOf(candidate.producerContext()), consumerTags))
-                .findFirst();
+                .filter(candidate -> isProducerSuperset(tagsOf(candidate.producerContext()), consumerTags))
+                .min(Comparator.comparingInt(candidate -> tagsOf(candidate.producerContext()).size()));
     }
 
     @Override
@@ -41,16 +47,11 @@ public class SharedByTagStrategy implements ShareStrategy {
                 && !tagsOf(context).isEmpty();
     }
 
-    private boolean hasCommonTag(Set<String> producerTags, Set<String> consumerTags) {
+    private boolean isProducerSuperset(Set<String> producerTags, Set<String> consumerTags) {
         if (producerTags.isEmpty() || consumerTags.isEmpty()) {
             return false;
         }
-        for (String consumerTag : consumerTags) {
-            if (producerTags.contains(consumerTag)) {
-                return true;
-            }
-        }
-        return false;
+        return producerTags.containsAll(consumerTags);
     }
 
     private Set<String> tagsOf(FixtureScopeContext context) {

@@ -8,7 +8,6 @@ import org.testng.ITestResult;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,7 +60,7 @@ public class TestngFixtureManager {
         String testClassName = testClass.getName();
         String testMethodName = method != null ? method.getMethodName() : null;
         String scopeId = buildInvocationId(testResult);
-        Set<String> tags = resolveTags(method);
+        Set<String> tags = resolveFixtureTags(testClass, resolveJavaMethod(method));
         Set<String> annotations = resolveAnnotationNames(testResult);
         String packageName = resolvePackageName(testResult);
 
@@ -202,11 +201,28 @@ public class TestngFixtureManager {
         return resolveConfiguredStrategy(suite).orElse(annotationStrategy);
     }
 
-    private Set<String> resolveTags(ITestNGMethod method) {
-        if (method == null) {
-            return Set.of();
+    private Set<String> resolveFixtureTags(Class<?> testClass, Method method) {
+        Set<String> tags = new LinkedHashSet<>();
+        collectFixtureTags(testClass.getAnnotation(FixtureTags.class), tags);
+        if (method != null) {
+            collectFixtureTags(method.getAnnotation(FixtureTags.class), tags);
         }
-        return new LinkedHashSet<>(Arrays.asList(method.getGroups()));
+        return tags;
+    }
+
+    private void collectFixtureTags(FixtureTags fixtureTags, Set<String> target) {
+        if (fixtureTags == null || fixtureTags.value().length == 0) {
+            return;
+        }
+        for (String rawTag : fixtureTags.value()) {
+            if (rawTag == null) {
+                continue;
+            }
+            String normalized = rawTag.trim();
+            if (!normalized.isEmpty()) {
+                target.add(normalized);
+            }
+        }
     }
 
     private Set<String> resolveAnnotationNames(ITestResult testResult) {
