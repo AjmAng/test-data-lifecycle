@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.runtime;
 
 /**
  * Encapsulates eager-fetch decisions so adapters can keep a single source of truth.
@@ -6,3 +6,4 @@ package io.github.ajmang.tdl.core.fixture;
 public class EagerFetchManager {
 
 }
+

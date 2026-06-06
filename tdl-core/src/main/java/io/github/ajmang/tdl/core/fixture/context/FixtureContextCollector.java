@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.context;
 
 import java.util.Map;
 
@@ -26,4 +26,5 @@ public interface FixtureContextCollector {
      */
     Map<String, Object> collect(FixtureContextCollectorInput input);
 }
+
 

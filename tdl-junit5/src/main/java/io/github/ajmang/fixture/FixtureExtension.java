@@ -1,8 +1,8 @@
 package io.github.ajmang.fixture;
 
-import io.github.ajmang.tdl.core.fixture.EagerFetch;
-import io.github.ajmang.tdl.core.fixture.Fixture;
-import io.github.ajmang.tdl.core.fixture.FixtureScopeContext;
+import io.github.ajmang.tdl.core.fixture.api.EagerFetch;
+import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import org.junit.jupiter.api.extension.*;
 
 import java.lang.reflect.Field;
@@ -84,13 +84,13 @@ public class FixtureExtension implements
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.Fixture.class).isPresent();
+        return parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.api.Fixture.class).isPresent();
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         // set parameter value which is annotated with @Fixture
-        Optional<Fixture> annotation = parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.Fixture.class);
+        Optional<Fixture> annotation = parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.api.Fixture.class);
         InjectionMetadata metadata = new InjectionMetadata(
                 FixtureScopeContext.InjectionPoint.PARAMETER,
                 parameterContext.getDeclaringExecutable().getName(),

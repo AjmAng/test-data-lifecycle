@@ -1,7 +1,7 @@
 package io.github.ajmang.tdl.junit5examples.biztag;
 
-import io.github.ajmang.tdl.core.fixture.FixtureContextCollector;
-import io.github.ajmang.tdl.core.fixture.FixtureContextCollectorInput;
+import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollector;
+import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollectorInput;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Collections;

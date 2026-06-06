@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.api;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -36,3 +36,4 @@ public record RetryPolicy(int maxAttempts, Duration backoff, Class<? extends Thr
         return Arrays.stream(retryOn).anyMatch(type -> type.isInstance(throwable));
     }
 }
+

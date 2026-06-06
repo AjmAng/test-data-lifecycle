@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.api;
 
 public interface FixtureProvider<T> {
     T create();
@@ -9,4 +9,5 @@ public interface FixtureProvider<T> {
         return RetryPolicy.none();
     }
 }
+
 

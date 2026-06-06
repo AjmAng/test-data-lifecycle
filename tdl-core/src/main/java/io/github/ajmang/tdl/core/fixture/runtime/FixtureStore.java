@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.runtime;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -11,4 +11,5 @@ public interface FixtureStore {
 
     void put(String key, ManagedFixture<?> fixture);
 }
+
 

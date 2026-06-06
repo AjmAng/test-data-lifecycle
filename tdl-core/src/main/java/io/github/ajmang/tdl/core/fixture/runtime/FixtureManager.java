@@ -1,4 +1,10 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.runtime;
+
+import io.github.ajmang.tdl.core.fixture.api.FixtureProvider;
+import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
+import io.github.ajmang.tdl.core.fixture.api.RetryPolicy;
+import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
+import io.github.ajmang.tdl.core.fixture.strategy.ShareStrategy;
 
 import java.util.List;
 import java.util.UUID;
@@ -80,7 +86,9 @@ public class FixtureManager {
 
     private <T> ManagedFixture<T> createManagedFixture(FixtureRequest<T> request, FixtureScopeContext scopeContext) {
         try {
-            FixtureProvider<T> provider = request.providerType().getDeclaredConstructor().newInstance();
+            var constructor = request.providerType().getDeclaredConstructor();
+            constructor.setAccessible(true);
+            FixtureProvider<T> provider = constructor.newInstance();
             T fixture = createWithRetry(provider, request.fixtureType());
             return getTManagedFixture(fixture, provider, scopeContext);
 
@@ -131,4 +139,5 @@ public class FixtureManager {
         return fixtureType.cast(fixture);
     }
 }
+
 

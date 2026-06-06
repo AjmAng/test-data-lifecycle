@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.context;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -205,3 +205,4 @@ public record FixtureScopeContext(
         PARAMETER
     }
 }
+

@@ -1,6 +1,18 @@
 package io.github.ajmang.fixture;
 
-import io.github.ajmang.tdl.core.fixture.*;
+import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
+import io.github.ajmang.tdl.core.fixture.api.FixtureTags;
+import io.github.ajmang.tdl.core.fixture.api.UseFixtureCollectors;
+import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollector;
+import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollectorInput;
+import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollectorRegistry;
+import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
+import io.github.ajmang.tdl.core.fixture.runtime.FixtureManager;
+import io.github.ajmang.tdl.core.fixture.runtime.FixtureStore;
+import io.github.ajmang.tdl.core.fixture.runtime.ManagedFixture;
+import io.github.ajmang.tdl.core.fixture.strategy.DefaultShareStrategy;
+import io.github.ajmang.tdl.core.fixture.strategy.ShareStrategy;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.lang.annotation.Annotation;
@@ -207,7 +219,7 @@ public class Junit5FixtureManager {
         return findMethodContext(context);
     }
 
-    private Class<? extends ShareStrategy> resolveEffectiveStrategy(io.github.ajmang.tdl.core.fixture.Fixture annotation, ExtensionContext context) {
+    private Class<? extends ShareStrategy> resolveEffectiveStrategy(Fixture annotation, ExtensionContext context) {
         Class<? extends ShareStrategy> annotationStrategy = annotation.strategy();
         if (!DefaultShareStrategy.class.equals(annotationStrategy)) {
             return annotationStrategy;

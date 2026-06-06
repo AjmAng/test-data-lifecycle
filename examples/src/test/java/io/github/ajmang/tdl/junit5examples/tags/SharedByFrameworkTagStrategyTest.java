@@ -1,9 +1,9 @@
 package io.github.ajmang.tdl.junit5examples.tags;
 
 import io.github.ajmang.fixture.FixtureExtension;
-import io.github.ajmang.tdl.core.fixture.Fixture;
-import io.github.ajmang.tdl.core.fixture.FixtureTags;
-import io.github.ajmang.tdl.core.fixture.SharedByTagStrategy;
+import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.api.FixtureTags;
+import io.github.ajmang.tdl.core.fixture.strategy.SharedByTagStrategy;
 import io.github.ajmang.tdl.junit5examples.basic.DirectoryResource;
 import io.github.ajmang.tdl.junit5examples.basic.DirectoryResourceProvider;
 import org.junit.jupiter.api.Assertions;

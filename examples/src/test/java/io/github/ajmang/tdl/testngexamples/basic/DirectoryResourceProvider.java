@@ -1,6 +1,6 @@
 package io.github.ajmang.tdl.testngexamples.basic;
 
-import io.github.ajmang.tdl.core.fixture.FixtureProvider;
+import io.github.ajmang.tdl.core.fixture.api.FixtureProvider;
 
 import java.io.IOException;
 import java.nio.file.Files;

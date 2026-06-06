@@ -1,4 +1,6 @@
-package io.github.ajmang.tdl.core.fixture;
+package io.github.ajmang.tdl.core.fixture.api;
+
+import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollector;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -17,4 +19,5 @@ public @interface UseFixtureCollectors {
 
     Class<? extends FixtureContextCollector>[] value();
 }
+
 
