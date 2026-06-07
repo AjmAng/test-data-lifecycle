@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture.api;
+package io.github.ajmang.tdl.core.fixture.strategy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

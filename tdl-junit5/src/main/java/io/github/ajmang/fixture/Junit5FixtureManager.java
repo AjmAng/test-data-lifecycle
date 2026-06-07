@@ -2,7 +2,7 @@ package io.github.ajmang.fixture;
 
 import io.github.ajmang.tdl.core.fixture.api.Fixture;
 import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
-import io.github.ajmang.tdl.core.fixture.api.FixtureTags;
+import io.github.ajmang.tdl.core.fixture.strategy.FixtureTags;
 import io.github.ajmang.tdl.core.fixture.api.UseFixtureCollectors;
 import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollector;
 import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollectorInput;
