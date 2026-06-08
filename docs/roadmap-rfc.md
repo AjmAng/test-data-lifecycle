@@ -1,4 +1,4 @@
-# RFC: TDL Roadmap — Retry, Prefetch, and Tag-Based Sharing
+# RFC: TDL Roadmap — Retry, Optional Prefetch, and Tag-Based Sharing
 
 - Status: Draft
 - Target versions: `1.0.0` – `1.2.0`
@@ -94,18 +94,22 @@ public interface RetryStrategy {
 
 ---
 
-## 3. Feature 2: Prefetch / Pre-warming
+## 3. Feature 2: Prefetch / Pre-warming (Optional)
 
-### 3.1 Motivation
+### 3.1 Positioning
+
+Prefetch is treated as an optional optimization instead of a core milestone gate. The default runtime path should remain lazy creation with deterministic behavior. Teams can opt in when fixture startup cost is the primary bottleneck.
+
+### 3.2 Motivation
 
 Fixture creation is often the bottleneck in test suites. If we know which fixtures a test class needs *before* the first test method runs, we can create them eagerly during a "setup phase". This is especially valuable for:
 - Docker containers that take 10-30s to start
 - Database schemas that require migration
 - Cloud resources with cold-start latency
 
-### 3.2 Proposed Design
+### 3.3 Proposed Design
 
-#### 3.2.1 Declaration: Prefetch Hint
+#### 3.3.1 Declaration: Prefetch Hint
 
 Extend `@Fixture` with a prefetch hint:
 
@@ -124,7 +128,7 @@ public enum Prefetch {
 }
 ```
 
-#### 3.2.2 Prefetch Orchestrator (`tdl-core`)
+#### 3.3.2 Prefetch Orchestrator (`tdl-core`)
 
 Introduce `PrefetchOrchestrator` in `tdl-core`:
 
@@ -139,7 +143,7 @@ public class PrefetchOrchestrator {
 }
 ```
 
-#### 3.2.3 JUnit 5 Integration
+#### 3.3.3 JUnit 5 Integration
 
 `FixtureExtension` implements `BeforeAllCallback`. During `beforeAll`:
 
@@ -152,7 +156,7 @@ During `beforeEach` / `resolveParameter`:
 - If the fixture was prefetched, await the `Future` (non-blocking if already done).
 - If not prefetched, fall back to normal `getOrCreate`.
 
-#### 3.2.4 Scope Considerations
+#### 3.3.4 Scope Considerations
 
 Prefetch only makes sense when the target scope is known ahead of time. For field injection, the scope is the test class (or whatever the `ShareStrategy` decides). For parameter injection, the scope is the method, so prefetch is usually not applicable.
 
@@ -165,7 +169,7 @@ static PostgreSQLContainer<?> postgres;
 void test(@Fixture(provider = TempDirProvider.class) Path temp) { }
 ```
 
-### 3.3 Open Questions
+### 3.4 Open Questions
 
 - Should prefetch be limited to `static` fields only, or also instance fields (with class-level scope)?
 - What happens if prefetch fails? Fail the entire test class upfront, or fallback to lazy creation?
@@ -257,35 +261,18 @@ class BillingIntegrationTest {
 }
 ```
 
-#### 4.2.3 Composite Strategy Builder
+#### 4.2.3 Built-in Strategy Scope (Simplified)
 
-A fluent API for composing rules:
+For early versions, built-in strategies stay intentionally small:
 
-```java
-public class CompositeStrategy implements ShareStrategy {
-    private final List<ShareRule> rules;
-
-    public static Builder builder() { return new Builder(); }
-
-    public static class Builder {
-        public Builder whenTag(String tag, ShareStrategy then) { ... }
-        public Builder whenClass(Class<?> clazz, ShareStrategy then) { ... }
-        public Builder defaultStrategy(ShareStrategy fallback) { ... }
-    }
-}
-
-// Usage in code or configuration
-CompositeStrategy.builder()
-    .whenTag("integration", new SharedByTagStrategy("integration"))
-    .whenTag("unit", new PerTestMethodStrategy())
-    .defaultStrategy(new PerTestClassStrategy())
-    .build();
-```
+- Keep `DefaultShareStrategy` as the safe baseline.
+- Keep `SharedByTagStrategy` for tag/group-centered sharing.
+- Defer `CompositeStrategy` and large built-in catalogs until concrete user demand appears.
 
 ### 4.3 Open Questions
 
 - How do we ensure consistent `scopeKey` computation when the same tag is used across multiple strategy instances? Should `scopeKey` be a first-class concept again, or is type + tag string sufficient?
-- What happens when a test has multiple tags and each tag wants a different sharing boundary?
+- What should the deterministic conflict rule be when a test carries multiple tags?
 - Should tag-based sharing work across the entire JVM (engine-level), or should it be scoped to a test plan / execution?
 - For TestNG, groups can be defined at suite level (XML). How do we propagate suite-level groups into `FixtureScopeContext`?
 
@@ -397,25 +384,11 @@ These four features are not independent. Here is how they interact:
 
 | Interaction | Behavior |
 |-------------|----------|
-| Retry + Prefetch | Prefetch `Future` internally uses retry. If all retries exhaust, the `Future` completes exceptionally. |
+| Retry + Prefetch | If prefetch is enabled, Prefetch `Future` internally uses retry. If all retries exhaust, the `Future` completes exceptionally. |
 | Retry + Tag Sharing | Retry applies to creation. Once created, the cached fixture is shared per tag rules. |
-| Prefetch + Tag Sharing | Prefetch scans all test classes in the plan to discover tag-based fixtures. This may require engine-level hooks (not just `BeforeAllCallback`). |
+| Prefetch + Tag Sharing | Prefetch remains class-scoped (`BeforeAllCallback`) and optional; tag sharing still works, but cross-class warm-up is not a roadmap goal. |
 | Cleanup + Tag Sharing | Shared fixtures ignore `CleanupPolicy` in `1.0.0` (see §5.2.4). Only isolated fixtures are retained on failure. |
-| All four | The ideal state: flaky heavy fixtures are created eagerly with retry, shared intelligently by tags, and preserved for inspection when tests fail. |
-
-### 6.1 Engine-Level Prefetch (Advanced)
-
-If Prefetch needs to discover fixtures across the entire test plan (e.g. to share a `@Tag("integration")` fixture across classes), JUnit 5's `BeforeAllCallback` is insufficient because it runs per-class. We may need:
-
-```java
-public interface EnginePrefetchExtension {
-    Set<FixtureRequest<?>> discoverFixtures(TestPlan testPlan);
-}
-```
-
-This would be a `TestExecutionListener` or a custom JUnit 5 `Engine` extension. This is complex and should be a `1.2.0` item.
-
-**Short-term compromise** (`1.0.0`): Prefetch only works within a single test class (via `BeforeAllCallback`). Cross-class tag sharing still works, but the first class to need the fixture pays the creation cost; subsequent classes hit the cache.
+| All four | The target state: flaky fixture creation is resilient with retry, sharing stays tag-aware, and cleanup is failure-aware; eager prefetch remains opt-in. |
 
 ---
 
@@ -423,10 +396,9 @@ This would be a `TestExecutionListener` or a custom JUnit 5 `Engine` extension. 
 
 ### `1.0.0` — Foundation
 - [ ] Provider retry with `RetryPolicy` (Feature 1, Option A)
-- [ ] Class-level prefetch with `BeforeAllCallback` (Feature 2, single-class scope)
+- [ ] Class-level prefetch with `BeforeAllCallback` as an opt-in optimization (Feature 2, single-class scope)
 - [ ] `FixtureScopeContext` enriched with `tags`, `annotations`, `packageName` (Feature 3, data model)
-- [ ] `SharedByTagStrategy` and `CompositeStrategy` (Feature 3, strategies)
-- [ ] Built-in strategy library: `PerTestMethod`, `PerTestClass`, `PerThread`, `Global`
+- [ ] Keep built-in strategy path focused on `DefaultShareStrategy` + `SharedByTagStrategy`
 - [ ] Debug event listener (cache hit/miss/create/destroy)
 - [ ] `CleanupPolicy` (`ALWAYS` / `ON_SUCCESS` / `NEVER`) for non-shared fixtures (Feature 4)
 
@@ -437,7 +409,6 @@ This would be a `TestExecutionListener` or a custom JUnit 5 `Engine` extension. 
 - [ ] `tdl-testng` adapter (group support)
 
 ### `1.2.0` — Advanced Orchestration
-- [ ] Engine-level prefetch (cross-class fixture discovery)
 - [ ] Lifecycle reporting (fixture creation time, cache hit rate, retry count, retained fixtures)
 - [ ] External configuration (`tdl.yml`, profiles)
 - [ ] Async `destroy()` / graceful shutdown hooks

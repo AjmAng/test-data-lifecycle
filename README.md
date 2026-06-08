@@ -27,12 +27,12 @@ Its main goal is to turn "whether test data is shared, when it is isolated, and 
 - Cached fixtures retain the `FixtureScopeContext` they were created with, so custom share strategies can compare current demand vs. producer-side context when deciding reuse
 - End-to-end custom context example: `examples/src/test/java/io/github/ajmang/tdl/junit5examples/biztag/BizTagHierarchyShareStrategyTest.java` demonstrates `@BizTag` collection via `ServiceLoader` and hierarchy-based sharing decisions
 - Lifecycle is centrally managed via JUnit 5 store so resources can be cleaned up when scope ends
+- Class-level eager fetch/prefetch is an optional optimization path, not a required baseline behavior
 
 See detailed design:
 
 - `docs/share-strategy-rfc.md`
 - `docs/roadmap-rfc.md`
-- `docs/engine-level-prefetch-rfc.md`
 
 ## Comparison: Testcontainers vs TDL
 
