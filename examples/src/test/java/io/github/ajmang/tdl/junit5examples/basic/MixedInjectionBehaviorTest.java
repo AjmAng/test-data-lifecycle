@@ -2,7 +2,7 @@ package io.github.ajmang.tdl.junit5examples.basic;
 
 
 import io.github.ajmang.fixture.FixtureExtension;
-import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.Fixture;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class MixedInjectionBehaviorTest {
 
     @Fixture(provider = DirectoryResourceProvider.class)
-    private DirectoryResource fieldResource;
+    DirectoryResource fieldResource;
 
     @Test
     void field_and_parameter_should_not_be_forced_same_instance(

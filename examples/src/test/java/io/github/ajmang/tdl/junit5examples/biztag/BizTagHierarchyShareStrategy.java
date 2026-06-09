@@ -1,9 +1,9 @@
 package io.github.ajmang.tdl.junit5examples.biztag;
 
-import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
+import io.github.ajmang.tdl.core.fixture.FixtureRequest;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import io.github.ajmang.tdl.core.fixture.runtime.ManagedFixture;
-import io.github.ajmang.tdl.core.fixture.strategy.ShareStrategy;
+import io.github.ajmang.tdl.core.fixture.share.ShareStrategy;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;

@@ -1,12 +1,10 @@
 package io.github.ajmang.tdl.core.fixture;
 
-import io.github.ajmang.tdl.core.fixture.api.FixtureProvider;
-import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import io.github.ajmang.tdl.core.fixture.runtime.FixtureManager;
 import io.github.ajmang.tdl.core.fixture.runtime.FixtureStore;
 import io.github.ajmang.tdl.core.fixture.runtime.ManagedFixture;
-import io.github.ajmang.tdl.core.fixture.strategy.IsolatedByLabelStrategy;
+import io.github.ajmang.tdl.core.fixture.share.IsolatedByLabelStrategy;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

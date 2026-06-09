@@ -1,7 +1,7 @@
 package io.github.ajmang.tdl.testngexamples.basic;
 
 import io.github.ajmang.testng.fixture.FixtureListener;
-import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.Fixture;
 import org.testng.Assert;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
@@ -14,7 +14,7 @@ public class FieldInjectionSharedTest {
     private static String firstId;
 
     @Fixture(provider = DirectoryResourceProvider.class)
-    private DirectoryResource resource;
+    DirectoryResource resource;
 
     @Test(priority = 1)
     public void first() {

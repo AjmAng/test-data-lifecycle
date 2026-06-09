@@ -1,6 +1,6 @@
-package io.github.ajmang.tdl.core.fixture.api;
+package io.github.ajmang.tdl.core.fixture;
 
-import io.github.ajmang.tdl.core.fixture.strategy.ShareStrategy;
+import io.github.ajmang.tdl.core.fixture.share.ShareStrategy;
 
 public record FixtureRequest<T>(
         Class<T> fixtureType,
@@ -19,5 +19,6 @@ public record FixtureRequest<T>(
         );
     }
 }
+
 
 

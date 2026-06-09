@@ -1,7 +1,7 @@
-package io.github.ajmang.tdl.core.fixture.api;
+package io.github.ajmang.tdl.core.fixture;
 
-import io.github.ajmang.tdl.core.fixture.strategy.DefaultShareStrategy;
-import io.github.ajmang.tdl.core.fixture.strategy.ShareStrategy;
+import io.github.ajmang.tdl.core.fixture.share.DefaultShareStrategy;
+import io.github.ajmang.tdl.core.fixture.share.ShareStrategy;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -17,5 +17,6 @@ public @interface Fixture {
 
     EagerFetch eagerFetch() default EagerFetch.DISABLED;
 }
+
 
 

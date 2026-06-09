@@ -1,6 +1,6 @@
 package io.github.ajmang.testng.fixture;
 
-import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.Fixture;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;

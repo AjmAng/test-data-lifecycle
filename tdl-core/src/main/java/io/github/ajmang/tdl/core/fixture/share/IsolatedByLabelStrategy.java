@@ -1,6 +1,6 @@
-package io.github.ajmang.tdl.core.fixture.strategy;
+package io.github.ajmang.tdl.core.fixture.share;
 
-import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
+import io.github.ajmang.tdl.core.fixture.FixtureRequest;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import io.github.ajmang.tdl.core.fixture.runtime.ManagedFixture;
 
@@ -27,16 +27,13 @@ public class IsolatedByLabelStrategy implements ShareStrategy {
         }
 
         Optional<String> consumerLabel = labelOf(context);
-        if (consumerLabel.isEmpty()) {
-            return candidates.stream().findFirst();
-        }
-
-        return candidates.stream()
+        return consumerLabel.map(s -> candidates.stream()
                 .filter(candidate -> candidate.producerContext() != null)
                 .filter(candidate -> labelOf(candidate.producerContext())
-                        .map(candidateLabel -> !candidateLabel.equals(consumerLabel.get()))
+                        .map(candidateLabel -> !candidateLabel.equals(s))
                         .orElse(false))
-                .findFirst();
+                .findFirst()).orElseGet(() -> candidates.stream().findFirst());
+
     }
 
     @Override
@@ -58,3 +55,4 @@ public class IsolatedByLabelStrategy implements ShareStrategy {
         return Optional.empty();
     }
 }
+

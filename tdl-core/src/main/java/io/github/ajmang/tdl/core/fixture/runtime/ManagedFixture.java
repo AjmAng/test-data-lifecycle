@@ -1,6 +1,6 @@
 package io.github.ajmang.tdl.core.fixture.runtime;
 
-import io.github.ajmang.tdl.core.fixture.api.FixtureProvider;
+import io.github.ajmang.tdl.core.fixture.FixtureProvider;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 
 public final class ManagedFixture<T> implements AutoCloseable {
@@ -34,6 +34,7 @@ public final class ManagedFixture<T> implements AutoCloseable {
         }
     }
 }
+
 
 
 

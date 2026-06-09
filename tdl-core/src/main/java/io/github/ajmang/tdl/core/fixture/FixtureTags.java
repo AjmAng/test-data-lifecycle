@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture.strategy;
+package io.github.ajmang.tdl.core.fixture;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,5 +11,4 @@ public @interface FixtureTags {
 
     String[] value();
 }
-
 

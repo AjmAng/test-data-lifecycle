@@ -1,10 +1,10 @@
 package io.github.ajmang.tdl.core.fixture.runtime;
 
-import io.github.ajmang.tdl.core.fixture.api.FixtureProvider;
-import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
-import io.github.ajmang.tdl.core.fixture.api.RetryPolicy;
+import io.github.ajmang.tdl.core.fixture.FixtureProvider;
+import io.github.ajmang.tdl.core.fixture.FixtureRequest;
+import io.github.ajmang.tdl.core.fixture.RetryPolicy;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
-import io.github.ajmang.tdl.core.fixture.strategy.ShareStrategy;
+import io.github.ajmang.tdl.core.fixture.share.ShareStrategy;
 
 import java.util.List;
 import java.util.UUID;
@@ -139,5 +139,6 @@ public class FixtureManager {
         return fixtureType.cast(fixture);
     }
 }
+
 
 

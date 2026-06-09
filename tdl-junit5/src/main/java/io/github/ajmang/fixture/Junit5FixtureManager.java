@@ -1,9 +1,9 @@
 package io.github.ajmang.fixture;
 
-import io.github.ajmang.tdl.core.fixture.api.Fixture;
-import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
-import io.github.ajmang.tdl.core.fixture.strategy.FixtureTags;
-import io.github.ajmang.tdl.core.fixture.api.UseFixtureCollectors;
+import io.github.ajmang.tdl.core.fixture.Fixture;
+import io.github.ajmang.tdl.core.fixture.FixtureRequest;
+import io.github.ajmang.tdl.core.fixture.FixtureTags;
+import io.github.ajmang.tdl.core.fixture.UseFixtureCollectors;
 import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollector;
 import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollectorInput;
 import io.github.ajmang.tdl.core.fixture.context.FixtureContextCollectorRegistry;
@@ -11,8 +11,8 @@ import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import io.github.ajmang.tdl.core.fixture.runtime.FixtureManager;
 import io.github.ajmang.tdl.core.fixture.runtime.FixtureStore;
 import io.github.ajmang.tdl.core.fixture.runtime.ManagedFixture;
-import io.github.ajmang.tdl.core.fixture.strategy.DefaultShareStrategy;
-import io.github.ajmang.tdl.core.fixture.strategy.ShareStrategy;
+import io.github.ajmang.tdl.core.fixture.share.DefaultShareStrategy;
+import io.github.ajmang.tdl.core.fixture.share.ShareStrategy;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.lang.annotation.Annotation;
@@ -193,7 +193,7 @@ public class Junit5FixtureManager {
     }
 
     private void collectFixtureTags(FixtureTags fixtureTags, Set<String> target) {
-        if (fixtureTags == null || fixtureTags.value().length == 0) {
+        if (fixtureTags == null) {
             return;
         }
         for (String rawTag : fixtureTags.value()) {

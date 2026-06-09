@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture.api;
+package io.github.ajmang.tdl.core.fixture;
 
 public interface FixtureProvider<T> {
     T create();
@@ -13,5 +13,6 @@ public interface FixtureProvider<T> {
         return CleanupPolicy.ALWAYS;
     }
 }
+
 
 

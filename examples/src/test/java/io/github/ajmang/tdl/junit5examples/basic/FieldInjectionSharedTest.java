@@ -1,7 +1,7 @@
 package io.github.ajmang.tdl.junit5examples.basic;
 
 import io.github.ajmang.fixture.FixtureExtension;
-import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.Fixture;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -12,7 +12,7 @@ class FieldInjectionSharedTest {
     private static String firstId;
 
     @Fixture(provider = DirectoryResourceProvider.class)
-    private DirectoryResource resource;
+    DirectoryResource resource;
 
     @Test
     @Order(1)

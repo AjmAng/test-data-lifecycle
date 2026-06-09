@@ -1,7 +1,5 @@
 package io.github.ajmang.tdl.core.fixture;
 
-import io.github.ajmang.tdl.core.fixture.api.CleanupPolicy;
-import io.github.ajmang.tdl.core.fixture.api.FixtureProvider;
 import io.github.ajmang.tdl.core.fixture.runtime.ManagedFixture;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -84,9 +82,7 @@ class CleanupPolicyTest {
         final AtomicBoolean wasDestroyed = new AtomicBoolean(false);
         private final CleanupPolicy policy;
 
-        DestructionTrackingProvider() {
-            this.policy = CleanupPolicy.ALWAYS;
-        }
+
 
         DestructionTrackingProvider(CleanupPolicy policy) {
             this.policy = policy;

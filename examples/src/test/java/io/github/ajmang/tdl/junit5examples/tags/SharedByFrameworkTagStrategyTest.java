@@ -1,9 +1,9 @@
 package io.github.ajmang.tdl.junit5examples.tags;
 
 import io.github.ajmang.fixture.FixtureExtension;
-import io.github.ajmang.tdl.core.fixture.api.Fixture;
-import io.github.ajmang.tdl.core.fixture.strategy.FixtureTags;
-import io.github.ajmang.tdl.core.fixture.strategy.SharedByTagStrategy;
+import io.github.ajmang.tdl.core.fixture.Fixture;
+import io.github.ajmang.tdl.core.fixture.FixtureTags;
+import io.github.ajmang.tdl.core.fixture.share.SharedByTagStrategy;
 import io.github.ajmang.tdl.junit5examples.basic.DirectoryResource;
 import io.github.ajmang.tdl.junit5examples.basic.DirectoryResourceProvider;
 import org.junit.jupiter.api.Assertions;
@@ -19,7 +19,6 @@ class SharedByFrameworkTagStrategyTest {
 
     private static String integrationId;
     private static String billingId;
-    private static String combinedId;
 
     @Fixture(provider = DirectoryResourceProvider.class, strategy = SharedByTagStrategy.class)
     private DirectoryResource resource;
@@ -62,7 +61,7 @@ class SharedByFrameworkTagStrategyTest {
     @FixtureTags({"integration", "billing"})
     void combinedTagsCreateDedicatedFixture() {
         Assertions.assertNotNull(resource);
-        combinedId = resource.id();
+        String combinedId = resource.id();
         Assertions.assertNotEquals(integrationId, combinedId);
         Assertions.assertNotEquals(billingId, combinedId);
     }

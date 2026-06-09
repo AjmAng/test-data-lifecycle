@@ -1,4 +1,4 @@
-package io.github.ajmang.tdl.core.fixture.api;
+package io.github.ajmang.tdl.core.fixture;
 
 /**
  * Defines when a fixture should be destroyed.
@@ -30,4 +30,5 @@ public enum CleanupPolicy {
         return ALWAYS;
     }
 }
+
 

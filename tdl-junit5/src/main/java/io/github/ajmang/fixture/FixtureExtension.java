@@ -1,7 +1,7 @@
 package io.github.ajmang.fixture;
 
-import io.github.ajmang.tdl.core.fixture.api.EagerFetch;
-import io.github.ajmang.tdl.core.fixture.api.Fixture;
+import io.github.ajmang.tdl.core.fixture.EagerFetch;
+import io.github.ajmang.tdl.core.fixture.Fixture;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import org.junit.jupiter.api.extension.*;
 
@@ -52,17 +52,17 @@ public class FixtureExtension implements
     }
 
     @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
+    public void afterAll(ExtensionContext extensionContext) {
         classPrefetchCache(extensionContext).clear();
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) throws Exception {
+    public void afterEach(ExtensionContext extensionContext) {
 
     }
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+    public void beforeAll(ExtensionContext extensionContext) {
         Map<String, Object> prefetchCache = classPrefetchCache(extensionContext);
         for (Field field : extensionContext.getRequiredTestClass().getDeclaredFields()) {
             Fixture fixture = field.getAnnotation(Fixture.class);
@@ -84,13 +84,13 @@ public class FixtureExtension implements
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.api.Fixture.class).isPresent();
+        return parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.Fixture.class).isPresent();
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         // set parameter value which is annotated with @Fixture
-        Optional<Fixture> annotation = parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.api.Fixture.class);
+        Optional<Fixture> annotation = parameterContext.findAnnotation(io.github.ajmang.tdl.core.fixture.Fixture.class);
         InjectionMetadata metadata = new InjectionMetadata(
                 FixtureScopeContext.InjectionPoint.PARAMETER,
                 parameterContext.getDeclaringExecutable().getName(),

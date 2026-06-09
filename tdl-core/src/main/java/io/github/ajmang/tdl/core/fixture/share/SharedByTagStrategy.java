@@ -1,6 +1,6 @@
-package io.github.ajmang.tdl.core.fixture.strategy;
+package io.github.ajmang.tdl.core.fixture.share;
 
-import io.github.ajmang.tdl.core.fixture.api.FixtureRequest;
+import io.github.ajmang.tdl.core.fixture.FixtureRequest;
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import io.github.ajmang.tdl.core.fixture.runtime.ManagedFixture;
 
@@ -85,5 +85,4 @@ public class SharedByTagStrategy implements ShareStrategy {
         return tags;
     }
 }
-
 
