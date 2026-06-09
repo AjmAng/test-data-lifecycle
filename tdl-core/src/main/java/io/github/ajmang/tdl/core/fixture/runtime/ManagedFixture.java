@@ -23,6 +23,10 @@ public final class ManagedFixture<T> implements AutoCloseable {
         return producerContext;
     }
 
+    public FixtureProvider<T> provider() {
+        return provider;
+    }
+
     @Override
     public void close() {
         if (provider != null) {

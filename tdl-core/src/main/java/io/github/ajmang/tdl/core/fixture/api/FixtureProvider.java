@@ -8,6 +8,10 @@ public interface FixtureProvider<T> {
     default RetryPolicy retryPolicy() {
         return RetryPolicy.none();
     }
+
+    default CleanupPolicy cleanupPolicy() {
+        return CleanupPolicy.ALWAYS;
+    }
 }
 
 

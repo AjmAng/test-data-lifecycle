@@ -127,6 +127,11 @@ class ProducerContextAwareReuseTest {
         public void put(String key, ManagedFixture<?> fixture) {
             fixtures.put(key, fixture);
         }
+
+        @Override
+        public ManagedFixture<?> remove(String key) {
+            return fixtures.remove(key);
+        }
     }
 }
 

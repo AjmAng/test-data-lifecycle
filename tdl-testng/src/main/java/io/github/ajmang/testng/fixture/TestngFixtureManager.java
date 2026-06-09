@@ -308,6 +308,11 @@ public class TestngFixtureManager {
             fixtureMap().put(key, fixture);
         }
 
+        @Override
+        public ManagedFixture<?> remove(String key) {
+            return fixtureMap().remove(key);
+        }
+
         @SuppressWarnings("unchecked")
         private ConcurrentMap<String, ManagedFixture<?>> fixtureMap() {
             Object existing = suite.getAttribute(FIXTURE_MAP_KEY);

@@ -323,6 +323,17 @@ public class Junit5FixtureManager {
             store.put(key, new JunitManagedFixtureResource(fixture));
             keysIndex().add(key);
         }
+
+        @Override
+        public ManagedFixture<?> remove(String key) {
+            JunitManagedFixtureResource resource = store.get(key, JunitManagedFixtureResource.class);
+            if (resource != null) {
+                store.remove(key);
+                keysIndex().remove(key);
+                return resource.managedFixture;
+            }
+            return null;
+        }
     }
 
     private record JunitManagedFixtureResource(
