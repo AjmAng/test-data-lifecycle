@@ -77,19 +77,20 @@ class FixtureManagerRetryTest {
     }
 
     private FixtureScopeContext parameterScope() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put(FixtureScopeContext.ATTR_TEST_CLASS_NAME, "io.github.ajmang.tdl.tests.RetryTest");
+        attributes.put(FixtureScopeContext.ATTR_TEST_METHOD_NAME, "createsFixture");
+        attributes.put(FixtureScopeContext.ATTR_THREAD_ID, Thread.currentThread().getId());
+        attributes.put(FixtureScopeContext.ATTR_TAGS, java.util.Set.of("retry"));
+        attributes.put(FixtureScopeContext.ATTR_ANNOTATIONS, java.util.Set.of("org.junit.jupiter.api.Test"));
+        attributes.put(FixtureScopeContext.ATTR_PACKAGE_NAME, "io.github.ajmang.tdl.tests");
+        attributes.put("scenario", "retry");
         return new FixtureScopeContext(
-                "run-1",
-                "io.github.ajmang.tdl.tests.RetryTest",
-                "createsFixture",
                 "uid-1",
                 FixtureScopeContext.InjectionPoint.PARAMETER,
                 "arg0",
                 0,
-                Thread.currentThread().getId(),
-                java.util.Set.of("retry"),
-                java.util.Set.of("org.junit.jupiter.api.Test"),
-                "io.github.ajmang.tdl.tests",
-                Map.of("scenario", "retry")
+                attributes
         );
     }
 

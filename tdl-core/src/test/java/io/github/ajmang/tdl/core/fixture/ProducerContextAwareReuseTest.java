@@ -40,19 +40,20 @@ class ProducerContextAwareReuseTest {
     }
 
     private FixtureScopeContext scopeWithTag(String tag) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put(FixtureScopeContext.ATTR_TEST_CLASS_NAME, "example.TestClass");
+        attributes.put(FixtureScopeContext.ATTR_TEST_METHOD_NAME, "testMethod");
+        attributes.put(FixtureScopeContext.ATTR_THREAD_ID, 1L);
+        attributes.put(FixtureScopeContext.ATTR_TAGS, Set.of());
+        attributes.put(FixtureScopeContext.ATTR_ANNOTATIONS, Set.of());
+        attributes.put(FixtureScopeContext.ATTR_PACKAGE_NAME, "example");
+        attributes.put("biz.tags", Set.of(tag));
         return new FixtureScopeContext(
-                "run-1",
-                "example.TestClass",
-                "testMethod",
                 "uid-" + tag,
                 FixtureScopeContext.InjectionPoint.FIELD,
                 "fixtureField",
                 null,
-                1L,
-                Set.of(),
-                Set.of(),
-                "example",
-                Map.of("biz.tags", Set.of(tag))
+                attributes
         );
     }
 
