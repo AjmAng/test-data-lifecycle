@@ -1,4 +1,4 @@
-package io.github.ajmang.fixture;
+package io.github.ajmang.fixture.tdl;
 
 import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 

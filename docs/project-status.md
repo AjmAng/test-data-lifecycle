@@ -1,6 +1,6 @@
 # 项目进展与下一步计划
 
-> 更新时间：2026-06-11
+> 更新时间：2026-06-12
 > 基于当前 HEAD（含 `FixtureScopeContext` deprecated 方法清理）
 
 ---
@@ -74,7 +74,7 @@
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| **CleanupPolicy（Feature 4）** | ⚠️ 部分落地 | `CleanupPolicy` enum（`ALWAYS` / `ON_SUCCESS` / `NEVER`）已定义，`FixtureProvider` 接口已增加 `cleanup()` 默认方法，但**实际销毁/保留逻辑尚未实现**。`FixtureStore` 缺少 `remove`/`destroy` 方法，`FixtureExtension` 也未跟踪测试成败。 |
+| **CleanupPolicy（Feature 4）** | ✅ 已完成 | `CleanupPolicy` enum（`ALWAYS` / `ON_SUCCESS` / `NEVER`）已定义，支持 `shouldDestroy(boolean)` 方法。`ManagedFixture` 具备策略感知能力。JUnit 5 adapter 通过 `TestExecutionExceptionHandler` 跟踪测试成败，在 `afterEach` 中根据策略保留或销毁 fixture。TestNG adapter 通过 `afterInvocation` 实现相同逻辑。被保留的 fixture 在控制台输出 `[TDL] RETAINED fixture` 信息。完整单测和集成测试已覆盖。 |
 | **CompositeStrategy** | ⛔ 取消 | 不再作为 roadmap 目标，避免在早期阶段引入额外策略编排复杂度。 |
 | **内置策略库** | ✅ 收敛 | 内置策略以 `DefaultShareStrategy` + `SharedByTagStrategy` 为主，不再推进大而全策略集合。 |
 | **Debug Event Listener** | ❌ 未开始 | cache hit / miss / create / destroy 生命周期事件监听与报告未实现。 |
@@ -118,7 +118,19 @@ void put(String key, ManagedFixture<?> fixture);
 
 该类仅有类级 Javadoc，无任何字段或方法。`FixtureExtension` 中的 prefetch 逻辑应逐步迁移至此，以便 TestNG 等其他适配器复用。
 
-### 4.4 AI 生成代码的审查债务
+### 4.4 TestNG 参数注入限制
+
+TestNG 适配器当前**仅支持字段注入**，不支持通过 `@Fixture` 注解进行方法参数注入。原因如下：
+
+- **TestNG 7.10.2 缺少标准参数注入 SPI**：`IInjector` / `IInjectContext` / `IConstructorArgs` 等接口在该版本中不存在（仅有 `IInjectorFactory`，用于 Guice 集成，不适用于任意类型参数注入）。
+- **`IHookable` 回退方案不完善**：`IHookCallBack.getParameters()` 虽然能获取参数数组，但缺少 `setParameters()` 方法；且 TestNG 在调用 hookable 之前已完成了参数解析，对于无法识别的参数类型会直接跳过方法。
+- **无干净的注入点**：TestNG 的参数解析在 `IInvokedMethodListener.beforeInvocation()` 之前就已执行完毕，没有标准方式介入这一过程。
+
+**影响范围**：TestNG 用户如需参数注入，只能使用字段注入作为替代方案。方法签名如 `test(@Fixture(provider=...) MyFixture fixture)` 当前不可用。
+
+**升级路径**：若未来 TestNG 版本（7.12+）提供 `IInjector` SPI，可通过 ServiceLoader 机制注册自定义注入器，无需修改现有代码结构。当前 `InjectionMetadata` 已预留 `parameterIndex` 字段，`TestngFixtureManager.getOrCreate()` 也已完整支持参数注入所需的所有逻辑。
+
+### 4.5 AI 生成代码的审查债务
 
 项目前期代码大量由 AI 辅助生成，存在以下潜在风险：
 - **设计一致性**：部分类/方法命名、异常消息风格不统一。
@@ -191,7 +203,7 @@ void put(String key, ManagedFixture<?> fixture);
 
 ### 🟡 主题 D：TestNG 适配层补齐
 
-- 当前 TestNG 只有字段注入，缺少参数注入。
+- 当前 TestNG 只有字段注入，缺少参数注入（详见 §4.4）。
 - `TestngFixtureManager` 的 scope 收集逻辑（tag / group / annotation）可能不如 JUnit 5 完整，需对齐。
 - 若团队有 TestNG 存量测试，这个方向的 ROI 较高。
 

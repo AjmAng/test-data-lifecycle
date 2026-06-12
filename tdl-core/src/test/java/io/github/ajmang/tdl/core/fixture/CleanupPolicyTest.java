@@ -47,6 +47,51 @@ class CleanupPolicyTest {
         Assertions.assertEquals(CleanupPolicy.ALWAYS, CleanupPolicy.defaultPolicy());
     }
 
+    @Test
+    void testAlwaysShouldDestroy() {
+        Assertions.assertTrue(CleanupPolicy.ALWAYS.shouldDestroy(true));
+        Assertions.assertTrue(CleanupPolicy.ALWAYS.shouldDestroy(false));
+    }
+
+    @Test
+    void testNeverShouldDestroy() {
+        Assertions.assertFalse(CleanupPolicy.NEVER.shouldDestroy(true));
+        Assertions.assertFalse(CleanupPolicy.NEVER.shouldDestroy(false));
+    }
+
+    @Test
+    void testOnSuccessShouldDestroy() {
+        Assertions.assertTrue(CleanupPolicy.ON_SUCCESS.shouldDestroy(true));
+        Assertions.assertFalse(CleanupPolicy.ON_SUCCESS.shouldDestroy(false));
+    }
+
+    @Test
+    void testManagedFixtureShouldDestroy() {
+        // ALWAYS
+        DestructionTrackingProvider alwaysProvider = new DestructionTrackingProvider(CleanupPolicy.ALWAYS);
+        ManagedFixture<String> alwaysFixture = new ManagedFixture<>(alwaysProvider.create(), alwaysProvider, null);
+        Assertions.assertTrue(alwaysFixture.shouldDestroy(true));
+        Assertions.assertTrue(alwaysFixture.shouldDestroy(false));
+
+        // NEVER
+        NeverDestroyProvider neverProvider = new NeverDestroyProvider();
+        ManagedFixture<String> neverFixture = new ManagedFixture<>(neverProvider.create(), neverProvider, null);
+        Assertions.assertFalse(neverFixture.shouldDestroy(true));
+        Assertions.assertFalse(neverFixture.shouldDestroy(false));
+
+        // ON_SUCCESS
+        OnSuccessDestroyProvider onSuccessProvider = new OnSuccessDestroyProvider();
+        ManagedFixture<String> onSuccessFixture = new ManagedFixture<>(onSuccessProvider.create(), onSuccessProvider, null);
+        Assertions.assertTrue(onSuccessFixture.shouldDestroy(true));
+        Assertions.assertFalse(onSuccessFixture.shouldDestroy(false));
+    }
+
+    @Test
+    void testManagedFixtureCleanupPolicy() {
+        DestructionTrackingProvider provider = new DestructionTrackingProvider(CleanupPolicy.ON_SUCCESS);
+        ManagedFixture<String> managed = new ManagedFixture<>(provider.create(), provider, null);
+        Assertions.assertEquals(CleanupPolicy.ON_SUCCESS, managed.cleanupPolicy());
+    }
 
     @Test
     void testCleanupPolicyInManagedFixture() {

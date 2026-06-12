@@ -50,6 +50,38 @@ public class TestngFixtureManager {
         this.collectorRegistry = collectorRegistry;
     }
 
+    /**
+     * Cleans up fixtures after a test method based on cleanup policy.
+     * Retained fixtures are reported via standard output for post-mortem analysis.
+     *
+     * @param testResult the test result to check for pass/fail status
+     */
+    public void cleanupAfterTest(ITestResult testResult) {
+        boolean testPassed = testResult.isSuccess();
+        ISuite suite = testResult.getTestContext().getSuite();
+        Object stored = suite.getAttribute(FIXTURE_MAP_KEY);
+        if (!(stored instanceof ConcurrentMap<?, ?> rawMap)) {
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<String, ManagedFixture<?>> fixtureMap = (ConcurrentMap<String, ManagedFixture<?>>) rawMap;
+        List<String> toRemove = new ArrayList<>();
+        for (Map.Entry<String, ManagedFixture<?>> entry : fixtureMap.entrySet()) {
+            if (!entry.getValue().shouldDestroy(testPassed)) {
+                toRemove.add(entry.getKey());
+            }
+        }
+        for (String key : toRemove) {
+            ManagedFixture<?> removed = fixtureMap.remove(key);
+            if (removed != null) {
+                System.out.printf("[TDL] RETAINED fixture: key=%s, type=%s, cleanupPolicy=%s%n",
+                        key,
+                        removed.fixture().getClass().getName(),
+                        removed.cleanupPolicy());
+            }
+        }
+    }
+
     public static void closeAll(ISuite suite) {
         Object stored = suite.getAttribute(FIXTURE_MAP_KEY);
         if (!(stored instanceof ConcurrentMap<?, ?> rawMap)) {

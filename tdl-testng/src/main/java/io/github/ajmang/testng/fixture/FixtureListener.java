@@ -24,6 +24,14 @@ public class FixtureListener implements IInvokedMethodListener, ISuiteListener {
     }
 
     @Override
+    public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
+        if (testResult == null) {
+            return;
+        }
+        fixtureManager.cleanupAfterTest(testResult);
+    }
+
+    @Override
     public void onFinish(ISuite suite) {
         TestngFixtureManager.closeAll(suite);
     }

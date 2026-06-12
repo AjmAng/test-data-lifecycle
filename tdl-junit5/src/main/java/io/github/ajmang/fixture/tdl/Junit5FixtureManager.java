@@ -1,4 +1,4 @@
-package io.github.ajmang.fixture;
+package io.github.ajmang.fixture.tdl;
 
 import io.github.ajmang.tdl.core.fixture.Fixture;
 import io.github.ajmang.tdl.core.fixture.FixtureRequest;
@@ -34,8 +34,10 @@ public class Junit5FixtureManager {
             "tdl.junit5.fixture.default-strategy-class"
     };
 
-    private static final ExtensionContext.Namespace NAMESPACE =
+    static final ExtensionContext.Namespace NAMESPACE =
             ExtensionContext.Namespace.create(Junit5FixtureManager.class);
+
+    static final String FIXTURE_KEYS_INDEX = "tdl.fixture.keys.index";
 
     private final FixtureManager fixtureManager = new FixtureManager();
     private final FixtureContextCollectorRegistry collectorRegistry;
@@ -282,17 +284,63 @@ public class Junit5FixtureManager {
         return fallback;
     }
 
+    /**
+     * Cleans up method-level fixtures based on cleanup policy.
+     * Retained fixtures are reported via standard output for post-mortem analysis.
+     *
+     * @param methodContext the method-level ExtensionContext
+     * @param testPassed    true if the test passed, false if it failed
+     */
+    public void cleanupAfterTest(ExtensionContext methodContext, boolean testPassed) {
+        ExtensionContext.Store store = methodContext.getStore(NAMESPACE);
+        Set<String> keys = keysIndex(store);
+        for (String key : keys) {
+            JunitManagedFixtureResource resource = store.get(key, JunitManagedFixtureResource.class);
+            if (resource != null && !resource.managedFixture.shouldDestroy(testPassed)) {
+                store.remove(key);
+                System.out.printf("[TDL] RETAINED fixture: key=%s, type=%s, cleanupPolicy=%s%n",
+                        key,
+                        resource.managedFixture.fixture().getClass().getName(),
+                        resource.managedFixture.cleanupPolicy());
+            }
+        }
+    }
+
+    /**
+     * Cleans up class-level (field-injected) fixtures based on cleanup policy.
+     * Called from afterAll, using the aggregated class-level test outcome.
+     *
+     * @param classContext the class-level ExtensionContext
+     * @param classPassed  true if all tests in the class passed, false if any failed
+     */
+    public void cleanupClassFixtures(ExtensionContext classContext, boolean classPassed) {
+        ExtensionContext.Store store = classContext.getStore(NAMESPACE);
+        Set<String> keys = keysIndex(store);
+        for (String key : keys) {
+            JunitManagedFixtureResource resource = store.get(key, JunitManagedFixtureResource.class);
+            if (resource != null && !resource.managedFixture.shouldDestroy(classPassed)) {
+                store.remove(key);
+                System.out.printf("[TDL] RETAINED fixture: key=%s, type=%s, cleanupPolicy=%s%n",
+                        key,
+                        resource.managedFixture.fixture().getClass().getName(),
+                        resource.managedFixture.cleanupPolicy());
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    static Set<String> keysIndex(ExtensionContext.Store store) {
+        return (Set<String>) store.getOrComputeIfAbsent(
+                FIXTURE_KEYS_INDEX,
+                key -> ConcurrentHashMap.<String>newKeySet(),
+                Set.class
+        );
+    }
+
     private record JunitFixtureStore(ExtensionContext.Store store) implements FixtureStore {
 
-        private static final String FIXTURE_KEYS_INDEX = "tdl.fixture.keys.index";
-
-        @SuppressWarnings("unchecked")
         private Set<String> keysIndex() {
-            return (Set<String>) store.getOrComputeIfAbsent(
-                    FIXTURE_KEYS_INDEX,
-                    key -> ConcurrentHashMap.<String>newKeySet(),
-                    Set.class
-            );
+            return Junit5FixtureManager.keysIndex(store);
         }
 
         @Override

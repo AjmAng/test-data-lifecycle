@@ -31,10 +31,8 @@ public class FixtureManager {
             }
 
             ManagedFixture<T> createdFixture = createManagedFixture(request, scopeContext);
-            if (strategy.shouldCacheCreatedFixture(scopeContext)) {
-                String cacheKey = buildCacheKey(request, scopeContext);
-                store.put(cacheKey, createdFixture);
-            }
+            String cacheKey = buildCacheKey(request, scopeContext);
+            store.put(cacheKey, createdFixture);
 
             return createdFixture.fixture();
         } catch (Exception e) {

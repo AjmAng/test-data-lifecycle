@@ -1,6 +1,6 @@
 package io.github.ajmang.tdl.junit5examples.biztag;
 
-import io.github.ajmang.fixture.FixtureExtension;
+import io.github.ajmang.fixture.tdl.FixtureExtension;
 import io.github.ajmang.tdl.core.fixture.Fixture;
 import io.github.ajmang.tdl.core.fixture.UseFixtureCollectors;
 import io.github.ajmang.tdl.junit5examples.basic.DirectoryResource;

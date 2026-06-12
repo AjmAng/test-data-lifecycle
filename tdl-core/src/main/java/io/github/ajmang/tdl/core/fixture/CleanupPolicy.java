@@ -29,6 +29,20 @@ public enum CleanupPolicy {
     public static CleanupPolicy defaultPolicy() {
         return ALWAYS;
     }
+
+    /**
+     * Determines whether the fixture should be destroyed based on the policy and test outcome.
+     *
+     * @param testPassed true if the test passed, false if it failed
+     * @return true if the fixture should be destroyed, false if it should be retained
+     */
+    public boolean shouldDestroy(boolean testPassed) {
+        return switch (this) {
+            case ALWAYS -> true;
+            case NEVER -> false;
+            case ON_SUCCESS -> testPassed;
+        };
+    }
 }
 
 
