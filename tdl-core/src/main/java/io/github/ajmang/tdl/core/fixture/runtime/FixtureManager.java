@@ -7,7 +7,6 @@ import io.github.ajmang.tdl.core.fixture.context.FixtureScopeContext;
 import io.github.ajmang.tdl.core.fixture.share.ShareStrategy;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.ArrayList;
 import java.time.Duration;
 
@@ -60,12 +59,10 @@ public class FixtureManager {
                 + "::"
                 + request.providerType().getName()
                 + "::"
-                + safeScopeId(scopeContext)
-                + "::"
-                + UUID.randomUUID();
+                + safeScopeId(scopeContext);
     }
 
-    private String safeScopeId(FixtureScopeContext scopeContext) {
+    private String  safeScopeId(FixtureScopeContext scopeContext) {
         if (scopeContext == null || scopeContext.scopeId() == null) {
             return "global";
         }
