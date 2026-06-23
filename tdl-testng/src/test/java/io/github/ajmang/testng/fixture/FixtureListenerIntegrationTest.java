@@ -1,10 +1,8 @@
 package io.github.ajmang.testng.fixture;
 
-import io.github.ajmang.tdl.core.fixture.CleanupPolicy;
 import io.github.ajmang.tdl.core.fixture.Fixture;
 import io.github.ajmang.tdl.core.fixture.FixtureProvider;
 import org.testng.Assert;
-import org.testng.ITestResult;
 import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
 import org.testng.annotations.Listeners;
@@ -103,9 +101,5 @@ class FixtureListenerIntegrationTest {
             destroyed.incrementAndGet();
         }
 
-        @Override
-        public CleanupPolicy cleanupPolicy() {
-            return CleanupPolicy.ALWAYS;
-        }
     }
 }

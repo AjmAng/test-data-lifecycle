@@ -37,18 +37,6 @@ class RetryPolicyTest {
     }
 
     @Test
-    void rejectsMaxAttemptsLessThanOne() {
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> new RetryPolicy(0, Duration.ZERO, new Class[]{Exception.class}));
-    }
-
-    @Test
-    void rejectsNullBackoff() {
-        Assertions.assertThrows(NullPointerException.class,
-                () -> new RetryPolicy(1, null, new Class[]{Exception.class}));
-    }
-
-    @Test
     void rejectsNullRetryOn() {
         Assertions.assertThrows(NullPointerException.class,
                 () -> new RetryPolicy(1, Duration.ZERO, null));

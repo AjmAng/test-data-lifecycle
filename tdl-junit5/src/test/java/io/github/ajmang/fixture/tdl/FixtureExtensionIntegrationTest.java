@@ -1,6 +1,5 @@
 package io.github.ajmang.fixture.tdl;
 
-import io.github.ajmang.tdl.core.fixture.CleanupPolicy;
 import io.github.ajmang.tdl.core.fixture.Fixture;
 import io.github.ajmang.tdl.core.fixture.FixtureProvider;
 import org.junit.jupiter.api.Assertions;
