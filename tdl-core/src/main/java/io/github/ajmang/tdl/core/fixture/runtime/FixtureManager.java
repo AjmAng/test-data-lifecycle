@@ -26,6 +26,9 @@ public class FixtureManager {
             List<ManagedFixture<T>> candidates = collectCandidates(request, store);
             var selected = strategy.selectCachedFixture(scopeContext, request, candidates);
             if (selected.isPresent()) {
+                System.out.println("[TDL] REUSE fixture: type=" + request.fixtureType().getName()
+                        + ", provider=" + request.providerType().getSimpleName()
+                        + ", scope=" + cacheScope(scopeContext));
                 return castFixture(selected.get().fixture(), request.fixtureType());
             }
 
@@ -33,6 +36,9 @@ public class FixtureManager {
             String cacheKey = buildCacheKey(request, scopeContext);
             store.put(cacheKey, createdFixture);
 
+            System.out.println("[TDL] CREATE fixture: type=" + request.fixtureType().getName()
+                    + ", provider=" + request.providerType().getSimpleName()
+                    + ", scope=" + cacheScope(scopeContext));
             return createdFixture.fixture();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create fixture for type: " + request.fixtureType().getName(), e);
@@ -60,6 +66,12 @@ public class FixtureManager {
                 + request.providerType().getName()
                 + "::"
                 + safeScopeId(scopeContext);
+    }
+
+    private String cacheScope(FixtureScopeContext scopeContext) {
+        String scopeId = safeScopeId(scopeContext);
+        // Shorten for readability: keep last 50 chars
+        return scopeId.length() > 50 ? "..." + scopeId.substring(scopeId.length() - 50) : scopeId;
     }
 
     private String  safeScopeId(FixtureScopeContext scopeContext) {
@@ -111,6 +123,9 @@ public class FixtureManager {
                                     + " attempt(s)",
                             throwable);
                 }
+                System.out.println("[TDL] RETRY fixture: type=" + fixtureType.getName()
+                        + ", attempt=" + attempts + "/" + policy.maxAttempts()
+                        + ", reason=" + throwable.getClass().getSimpleName());
                 sleepBackoff(policy.backoff());
             }
         }

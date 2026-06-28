@@ -46,6 +46,7 @@ public final class ManagedFixture<T> implements AutoCloseable {
     @Override
     public void close() {
         if (provider != null) {
+            System.out.println("[TDL] DESTROY fixture: type=" + fixture.getClass().getName());
             provider.destroy(fixture);
         }
     }
